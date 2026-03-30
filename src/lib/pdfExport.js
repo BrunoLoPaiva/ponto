@@ -1,24 +1,28 @@
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { toast } from "./Toast"; // Or wait, Toast works differently, it's better to return a promise.
 
 export const generatePdfFromNode = async (containerNode, filename) => {
   try {
-    const pages = Array.from(containerNode.querySelectorAll('.pdf-page'));
-    if (pages.length === 0) throw new Error("Nenhuma página encontrada para gerar o PDF");
+    const pages = Array.from(containerNode.querySelectorAll(".pdf-page"));
+    if (pages.length === 0)
+      throw new Error("Nenhuma página encontrada para gerar o PDF");
 
-    const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const pdf = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4",
+    });
 
     for (let i = 0; i < pages.length; i++) {
       if (i > 0) pdf.addPage("a4", "landscape");
-      
+
       const canvas = await html2canvas(pages[i], {
         scale: 2,
         backgroundColor: "#ffffff",
         useCORS: true,
         allowTaint: true,
       });
-      
+
       const imgData = canvas.toDataURL("image/png");
       pdf.addImage(imgData, "PNG", 10, 10, 277, 190);
     }
