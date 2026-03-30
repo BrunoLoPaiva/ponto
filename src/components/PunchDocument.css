@@ -1,0 +1,364 @@
+/* ═══════════════════════════════════════════════════
+   PunchDocument.css — Pixel-perfect, print-safe layout
+   Uses fixed widths and table-based structure to ensure
+   html2canvas renders without flexbox misalignment.
+═══════════════════════════════════════════════════ */
+
+.pdf-page {
+  width: 1020px;
+  background-color: #ffffff;
+  color: #000000;
+  padding: 32px 36px;
+  font-family: Arial, Helvetica, sans-serif;
+  box-sizing: border-box;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* ── HEADER ── */
+.pdf-header {
+  display: table;
+  width: 100%;
+  border: 2px solid #000;
+  margin-bottom: 14px;
+  box-sizing: border-box;
+}
+
+.pdf-logo,
+.pdf-title,
+.pdf-doc-info {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.pdf-logo {
+  width: 200px;
+  padding: 8px 12px;
+  border-right: 1px solid #000;
+}
+
+.pdf-logo img {
+  max-width: 180px;
+  display: block;
+}
+
+.pdf-title {
+  font-size: 17px;
+  font-weight: bold;
+  text-align: center;
+  padding: 8px;
+  line-height: 1.3;
+}
+
+.pdf-doc-info {
+  width: 130px;
+  border-left: 1px solid #000;
+  text-align: center;
+  font-size: 11px;
+  font-weight: bold;
+  vertical-align: top;
+}
+
+.info-cell {
+  display: block;
+  border-bottom: 1px solid #000;
+  padding: 5px 6px;
+}
+
+/* ── BODY ── */
+.pdf-body {
+  margin-bottom: 20px;
+}
+
+.pdf-fields-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+.pdf-fields-table tr {
+  height: 28px;
+}
+
+.pdf-field-label {
+  font-weight: bold;
+  white-space: nowrap;
+  padding: 3px 6px 3px 0;
+  width: 80px;
+}
+
+.pdf-field-value {
+  border-bottom: 1px solid #000;
+  padding: 3px 6px;
+  width: auto;
+}
+
+/* ── SECTION TITLE ── */
+.pdf-section-title {
+  font-weight: bold;
+  font-size: 13px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* ── PUNCHES TABLE ── */
+.pdf-punches-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #000;
+  margin-bottom: 4px;
+}
+
+.pdf-punch-cell {
+  width: 25%;
+  vertical-align: top;
+  padding: 12px 10px;
+  border-right: 1px solid #000;
+}
+
+.pdf-punch-cell:last-child {
+  border-right: none;
+}
+
+.punch-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.punch-label {
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.punch-time-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.punch-time-label {
+  white-space: nowrap;
+}
+
+.pdf-checkbox {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid #000;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 11px;
+  background-color: #fff;
+  box-sizing: border-box;
+}
+
+.pdf-checkbox.checked {
+  background-color: #fff;
+  font-weight: bold;
+}
+
+.pdf-line-value {
+  display: inline-block;
+  min-width: 70px;
+  border-bottom: 1px solid #000;
+  text-align: center;
+  font-weight: bold;
+  font-size: 13px;
+  padding: 1px 4px;
+}
+
+/* Inputs (editable mode) */
+.pdf-time-input {
+  border: 1px solid #cbd5e1;
+  padding: 3px 5px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 13px;
+  width: 95px;
+  background: #f8fafc;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.pdf-time-input.active-input {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  background: #eff6ff;
+}
+
+.pdf-time-input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pdf-textarea-input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  padding: 8px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.pdf-textarea-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+/* ── JUSTIFICATION ── */
+.pdf-justification {
+  margin-top: 6px;
+}
+
+.pdf-just-line-text {
+  font-size: 14px;
+  font-style: italic;
+  min-height: 22px;
+  border-bottom: 1px solid #000;
+  margin-bottom: 6px;
+  padding-bottom: 2px;
+  line-height: 1.5;
+}
+
+.pdf-just-line {
+  border-bottom: 1px solid #000;
+  height: 22px;
+  margin-bottom: 6px;
+}
+
+/* ── FOOTER (Signatures table) ── */
+.pdf-footer {
+  margin-top: 24px;
+}
+
+.pdf-signatures-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #000;
+}
+
+.pdf-parecer-cell {
+  width: 26%;
+  border-right: 1px solid #000;
+  padding: 10px 12px;
+  vertical-align: top;
+}
+
+.pdf-parecer-title {
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.parecer-options {
+  display: flex;
+  gap: 16px;
+}
+
+.parecer-option {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.parecer-option.selected {
+  color: #0f172a;
+}
+
+.pdf-sig-cell {
+  width: 37%;
+  padding: 10px 16px;
+  text-align: center;
+  vertical-align: bottom;
+  border-right: 1px solid #000;
+}
+
+.pdf-sig-cell:last-child {
+  border-right: none;
+}
+
+.pdf-sig-line {
+  border-bottom: 1px solid #000;
+  min-height: 44px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
+
+.pdf-digital-stamp {
+  font-size: 9.5px;
+  color: #1d4ed8;
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.pdf-sig-label {
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ── DIGITAL SEAL ── */
+.pdf-digital-seal {
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: #f0f9ff;
+  border: 1.5px solid #7dd3fc;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1020px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.seal-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.seal-content {
+  flex: 1;
+}
+
+.seal-title {
+  font-size: 12px;
+  font-weight: bold;
+  color: #0369a1;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.seal-subtitle {
+  font-size: 11.5px;
+  color: #0369a1;
+  word-break: break-all;
+}
+
+/* Handwritten signature name rendered on the document */
+.pdf-handwritten-name {
+  font-size: 22px;
+  color: #1a1a6e;
+  line-height: 1;
+  display: block;
+  text-align: center;
+}
