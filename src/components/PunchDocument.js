@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import React, { forwardRef, useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext"; // Adicionar esta linha
 import "./PunchDocument.css";

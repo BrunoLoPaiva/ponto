@@ -1068,7 +1068,7 @@ export const RhDashboard = () => {
                   {isEditing && (
                     <>
                       <div className="tpl-preview-label">
-                        Pré-visualização (com nome "João Silva"):
+                        Pré-visualização (com nome &quot;João Silva&quot;):
                       </div>
                       <div
                         className="tpl-preview"
