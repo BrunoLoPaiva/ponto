@@ -1,18 +1,24 @@
 .doc-timeline {
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* Alinha pelo topo para manter as bolinhas fixas no mesmo eixo */
   gap: 0;
   padding: 0.75rem 0 0.5rem;
   overflow-x: auto;
   flex-wrap: nowrap;
+  scrollbar-width: none; /* Oculta scrollbar no Firefox */
+}
+
+.doc-timeline::-webkit-scrollbar {
+  display: none; /* Oculta scrollbar no Chrome/Safari/Edge */
 }
 
 .timeline-step {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.4rem;
   flex-shrink: 0;
+  width: 76px; /* Mantém a largura fixa e contida para os rótulos */
 }
 
 .timeline-dot {
@@ -25,6 +31,7 @@
   font-size: 0.75rem;
   font-weight: 700;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .timeline-step.done .timeline-dot {
@@ -47,9 +54,10 @@
   font-size: 0.65rem;
   font-weight: 600;
   text-align: center;
-  white-space: nowrap;
-  max-width: 72px;
-  line-height: 1.2;
+  white-space: normal; /* A MÁGICA: Permite quebrar linha! */
+  line-height: 1.25;
+  width: 100%;
+  word-wrap: break-word;
 }
 
 .timeline-step.done .timeline-label   { color: #10b981; }
@@ -60,8 +68,8 @@
   flex: 1;
   height: 2px;
   background: #e2e8f0;
-  margin-bottom: 1.1rem;
-  min-width: 16px;
+  min-width: 12px;
+  margin-top: 12px; /* 12px crava exatamente no meio da bolinha que tem 26px! */
   transition: background 0.3s;
 }
 
