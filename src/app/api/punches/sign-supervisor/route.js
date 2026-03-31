@@ -38,7 +38,7 @@ export async function POST(req) {
            ip_supervisor = ?, user_agent_supervisor = ?, hash_validacao = ?,
            supervisor_signature_font = ?, 
            nome_chefia_completo = COALESCE(?, nome_chefia)
-       WHERE id = ? AND status = 'PENDENTE_CHEFIA' AND nome_chefia LIKE ?`,
+       WHERE id = ? AND status = 'PENDENTE_CHEFIA' AND username_chefia = ?`,
       [
         now,
         abonadoInt,
@@ -48,7 +48,7 @@ export async function POST(req) {
         supervisor_font || null,
         nomeChefiaValido,
         id,
-        `%${user.username.split(".")[0]}%`, // Deixa a busca flexível para aprovação
+        user.username // Validação de segurança forte baseada no username do token
       ],
     );
 

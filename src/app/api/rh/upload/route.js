@@ -4,6 +4,18 @@ import { getDb } from "@/lib/db";
 import { getAuthUser } from "@/lib/apiAuth";
 import * as xlsx from "xlsx";
 
+function toCamelCase(str) {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .replace(/(?:^|\s)\S/g, function (a) {
+      return a.toUpperCase();
+    })
+    .replace(/\b(De|Da|Do|Das|Dos)\b/g, function (match) {
+      return match.toLowerCase();
+    });
+}
+
 function generateUsername(input) {
   if (!input) return "";
   let clean = String(input).trim().toLowerCase();
@@ -70,14 +82,16 @@ export async function POST(req) {
     const controladoresNotificados = new Set();
 
     for (const row of data) {
-      const nomeCompleto = row["Nome"] || row["Funcionário"] || "";
+      const nomeCompleto = toCamelCase(row["Nome"] || row["Funcionário"] || "");
       if (!nomeCompleto) continue;
 
       const nomeCr = row["Nome CR"] || row["Departamento"] || "";
-      // Pegamos o nome exato da chefia:
-      const nomeChefiaStr = row["Nome Chefia"] || row["Nome Gestor"] || "";
-      let nomeControladorStr =
-        row["NOME CONTROLADOR"] || row["Nome Controlador"] || "";
+      const nomeChefiaStr = toCamelCase(
+        row["Nome Chefia"] || row["Nome Gestor"] || "",
+      );
+      let nomeControladorStr = toCamelCase(
+        row["NOME CONTROLADOR"] || row["Nome Controlador"] || "",
+      );
       let matricula = String(row["Matrícula"] || row["Matricula"] || "")
         .trim()
         .replace(".0", "");
@@ -87,11 +101,15 @@ export async function POST(req) {
       const dia = row["Dia"] || row["DIA"] || "";
 
       const usernameFuncionario = generateUsername(nomeCompleto);
-      let usernameControlador = generateUsername(nomeControladorStr);
       const usernameChefia = generateUsername(nomeChefiaStr);
+      let usernameControlador = generateUsername(nomeControladorStr);
 
-      // REGRA DE PRIORIDADE: Se gestor e controlador forem a mesma pessoa, ignora como controlador
-      if (usernameChefia && usernameControlador && usernameChefia === usernameControlador) {
+      // REGRA: Se gestor e controlador forem a mesma pessoa, ignora como controlador
+      if (
+        usernameChefia &&
+        usernameControlador &&
+        usernameChefia === usernameControlador
+      ) {
         usernameControlador = "";
         nomeControladorStr = "";
       }
@@ -119,17 +137,19 @@ export async function POST(req) {
       await db.run(
         `
         INSERT INTO punch_adjustments (
-          nome_cr, nome_chefia, nome_controlador, matricula, nome_completo, 
-          username, descricao_horario, data_registro, dia, batidas_originais, status
+          nome_cr, nome_chefia, nome_controlador, username_chefia, username_controlador, 
+          matricula, nome_completo, username, descricao_horario, data_registro, dia, batidas_originais, status
         ) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
         [
           nomeCr,
-          nomeChefiaStr, // CORREÇÃO: Salva o nome COMPLETO do Gestor
-          usernameControlador || nomeControladorStr, // Pode ficar vazio devido à regra acima
+          nomeChefiaStr,
+          nomeControladorStr,
+          usernameChefia,
+          usernameControlador,
           matricula,
-          nomeCompleto.toUpperCase(),
+          nomeCompleto,
           usernameFuncionario,
           descricaoHorario,
           dataRegistro,
@@ -167,8 +187,8 @@ export async function POST(req) {
     });
 
     // Dispara os e-mails em segundo plano sem travar a resposta HTTP
-    Promise.all(emailPromises).catch((err) => 
-      console.error("Erro no envio de emails em background:", err)
+    Promise.all(emailPromises).catch((err) =>
+      console.error("Erro no envio de emails em background:", err),
     );
 
     return NextResponse.json({

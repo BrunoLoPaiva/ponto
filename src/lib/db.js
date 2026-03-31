@@ -43,7 +43,9 @@ async function initSchema(db) {
     CREATE TABLE IF NOT EXISTS rh_users (username TEXT PRIMARY KEY);
     CREATE TABLE IF NOT EXISTS punch_adjustments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nome_cr TEXT, nome_chefia TEXT, nome_controlador TEXT, matricula TEXT,
+      nome_cr TEXT, nome_chefia TEXT, nome_controlador TEXT, 
+      username_chefia TEXT, username_controlador TEXT,
+      matricula TEXT,
       nome_completo TEXT, username TEXT, descricao_horario TEXT, data_registro TEXT,
       dia TEXT, batidas_originais TEXT, batidas_corrigidas TEXT, marcacoes_faltantes TEXT,
       justificativa TEXT, status TEXT DEFAULT 'PENDENTE_FUNCIONARIO',
@@ -90,6 +92,8 @@ async function initSchema(db) {
     "ALTER TABLE punch_adjustments ADD COLUMN abonado INTEGER",
     "ALTER TABLE punch_adjustments ADD COLUMN anexo_path TEXT",
     "ALTER TABLE punch_adjustments ADD COLUMN banco_horas INTEGER DEFAULT 0",
+    "ALTER TABLE punch_adjustments ADD COLUMN username_chefia TEXT",
+    "ALTER TABLE punch_adjustments ADD COLUMN username_controlador TEXT",
   ];
 
   for (const sql of migrations) {

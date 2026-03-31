@@ -53,18 +53,14 @@ export async function POST(req) {
 
     // Simplificando verificação de supervisor para o exemplo
     dbUser.isSupervisor = (await db.get(
-      "SELECT 1 FROM punch_adjustments WHERE nome_chefia LIKE ? LIMIT 1",
-      [`%${username}%`],
-    ))
-      ? true
-      : false;
+      "SELECT 1 FROM punch_adjustments WHERE username_chefia = ? LIMIT 1",
+      [username],
+    )) ? true : false;
 
     dbUser.isController = (await db.get(
-      "SELECT 1 FROM punch_adjustments WHERE nome_controlador LIKE ? LIMIT 1",
-      [`%${username}%`],
-    ))
-      ? true
-      : false;
+      "SELECT 1 FROM punch_adjustments WHERE username_controlador = ? LIMIT 1",
+      [username],
+    )) ? true : false;
 
     const token = generateToken(dbUser);
     return NextResponse.json({ success: true, token, user: dbUser });

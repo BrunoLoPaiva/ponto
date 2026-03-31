@@ -21,7 +21,7 @@ export async function GET(req) {
 
     const db = await getDb();
     const row = await db.get(
-      `SELECT anexo_path, matricula, username, nome_chefia FROM punch_adjustments WHERE id = ?`,
+      `SELECT anexo_path, matricula, username, username_chefia FROM punch_adjustments WHERE id = ?`,
       [id],
     );
 
@@ -35,11 +35,10 @@ export async function GET(req) {
     const tokenUsername = user.username?.toLowerCase() || "";
     const tokenName = user.name?.toLowerCase() || "";
     const docUsername = row.username?.toLowerCase() || "";
-    const docChefia = row.nome_chefia?.toLowerCase() || "";
+    const docChefiaUsername = row.username_chefia?.toLowerCase() || "";
 
     const isOwner = tokenUsername === docUsername;
-    const isManager =
-      tokenName.includes(docChefia) || tokenUsername === docChefia;
+    const isManager = tokenUsername === docChefiaUsername;
     const isRH = user.role?.toUpperCase() === "RH";
 
     if (!isOwner && !isManager && !isRH) {

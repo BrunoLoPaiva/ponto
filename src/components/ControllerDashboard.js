@@ -10,8 +10,18 @@ import { generatePdfFromNode } from "@/lib/pdfExport";
 import "./ControllerDashboard.css";
 
 const MONTHS = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
 ];
 
 export const ControllerDashboard = () => {
@@ -41,7 +51,7 @@ export const ControllerDashboard = () => {
       try {
         const response = await fetch(
           `/api/punches/controller-adjustments?username=${user?.username}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         const data = await response.json();
         if (isMounted && data.success) setAdjustments(data.data);
@@ -61,11 +71,19 @@ export const ControllerDashboard = () => {
   }, [user?.username, token]);
 
   const parseBatidas = (jsonStr) => {
-    try { return JSON.parse(jsonStr) || []; } catch { return []; }
+    try {
+      return JSON.parse(jsonStr) || [];
+    } catch {
+      return [];
+    }
   };
   const parseMarcacoes = (jsonStr) => {
     if (!jsonStr) return [false, false, false, false];
-    try { return JSON.parse(jsonStr) || [false, false, false, false]; } catch { return [false, false, false, false]; }
+    try {
+      return JSON.parse(jsonStr) || [false, false, false, false];
+    } catch {
+      return [false, false, false, false];
+    }
   };
 
   const triggerPdf = (adj) => {
@@ -75,7 +93,7 @@ export const ControllerDashboard = () => {
       try {
         await generatePdfFromNode(
           pdfRef.current,
-          `Justificativa_Ponto_${adj.data_registro.replace(/\//g, "-")}_${adj.nome_completo.split(" ")[0]}.pdf`
+          `Justificativa_Ponto_${adj.data_registro.replace(/\//g, "-")}_${adj.nome_completo.split(" ")[0]}.pdf`,
         );
         toast("PDF gerado com sucesso!", "success");
       } catch (err) {
@@ -99,8 +117,8 @@ export const ControllerDashboard = () => {
               Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({ username: adj.username }), // cobraremos sempre o funcionário ou gestor? A API atual cobra o usuário de username.
-          })
-        )
+          }),
+        ),
       );
       toast(`${list.length} lembrete(s) enviado(s)!`, "success");
     } catch {
@@ -145,10 +163,18 @@ export const ControllerDashboard = () => {
     }
   };
 
-  const pendentesFunc = adjustments.filter(a => a.status === "PENDENTE_FUNCIONARIO");
-  const pendentesGestor = adjustments.filter(a => a.status === "PENDENTE_CHEFIA");
-  const filteredFuncs = pendentesFunc.filter(a => a.nome_completo?.toLowerCase().includes(search.toLowerCase()));
-  const filteredGestores = pendentesGestor.filter(a => a.nome_completo?.toLowerCase().includes(search.toLowerCase()));
+  const pendentesFunc = adjustments.filter(
+    (a) => a.status === "PENDENTE_FUNCIONARIO",
+  );
+  const pendentesGestor = adjustments.filter(
+    (a) => a.status === "PENDENTE_CHEFIA",
+  );
+  const filteredFuncs = pendentesFunc.filter((a) =>
+    a.nome_completo?.toLowerCase().includes(search.toLowerCase()),
+  );
+  const filteredGestores = pendentesGestor.filter((a) =>
+    a.nome_completo?.toLowerCase().includes(search.toLowerCase()),
+  );
 
   const history = adjustments
     .filter((a) => a.status === "CONCLUIDO")
@@ -157,15 +183,18 @@ export const ControllerDashboard = () => {
       return m - 1 === filterMonth && y === filterYear;
     });
 
-  const years = Array.from(new Set(
-    adjustments.filter(a => a.status === "CONCLUIDO")
-    .map(a => Number((a.data_registro || "").split("/")[2]))
-    .filter(Boolean)
-  )).sort((a, b) => b - a);
+  const years = Array.from(
+    new Set(
+      adjustments
+        .filter((a) => a.status === "CONCLUIDO")
+        .map((a) => Number((a.data_registro || "").split("/")[2]))
+        .filter(Boolean),
+    ),
+  ).sort((a, b) => b - a);
   if (!years.includes(filterYear)) years.push(filterYear);
 
   return (
-    <div className="controller-mode" style={{ marginTop: '1rem' }}>
+    <div className="controller-mode" style={{ marginTop: "1rem" }}>
       <ToastContainer />
 
       <div className="sub-tab-bar">
@@ -174,14 +203,18 @@ export const ControllerDashboard = () => {
           onClick={() => setActiveTab("pendentes-func")}
         >
           ⏳ Aguardando Funcionário
-          {pendentesFunc.length > 0 && <span className="tab-badge agenda">{pendentesFunc.length}</span>}
+          {pendentesFunc.length > 0 && (
+            <span className="tab-badge agenda">{pendentesFunc.length}</span>
+          )}
         </button>
         <button
           className={`sub-tab-btn ${activeTab === "pendentes-gestor" ? "active" : ""}`}
           onClick={() => setActiveTab("pendentes-gestor")}
         >
           ⏳ Aguardando Gestor
-          {pendentesGestor.length > 0 && <span className="tab-badge">{pendentesGestor.length}</span>}
+          {pendentesGestor.length > 0 && (
+            <span className="tab-badge">{pendentesGestor.length}</span>
+          )}
         </button>
         <button
           className={`sub-tab-btn ${activeTab === "historico" ? "active" : ""}`}
@@ -195,8 +228,17 @@ export const ControllerDashboard = () => {
         <SkeletonGrid count={2} />
       ) : (
         <>
-          {(activeTab === "pendentes-func" || activeTab === "pendentes-gestor") && (
-            <div className="team-search-bar" style={{ marginBottom: "1.25rem", display: "flex", gap: "1rem", alignItems: "center" }}>
+          {(activeTab === "pendentes-func" ||
+            activeTab === "pendentes-gestor") && (
+            <div
+              className="team-search-bar"
+              style={{
+                marginBottom: "1.25rem",
+                display: "flex",
+                gap: "1rem",
+                alignItems: "center",
+              }}
+            >
               <input
                 type="text"
                 placeholder="🔍 Buscar colaborador..."
@@ -212,7 +254,9 @@ export const ControllerDashboard = () => {
                   disabled={sendingAll}
                   style={{ whiteSpace: "nowrap" }}
                 >
-                  {sendingAll ? "⏳ Enviando..." : `🔔 Cobrar Todos (${filteredFuncs.length})`}
+                  {sendingAll
+                    ? "⏳ Enviando..."
+                    : `🔔 Cobrar Todos (${filteredFuncs.length})`}
                 </button>
               )}
             </div>
@@ -224,7 +268,10 @@ export const ControllerDashboard = () => {
                 <div className="empty-state">
                   <div className="empty-icon">✅</div>
                   <h3>Nenhum pendente!</h3>
-                  <p>Sua controladoria não tem documentos aguardando assinatura do funcionário.</p>
+                  <p>
+                    Sua controladoria não tem documentos aguardando assinatura
+                    do funcionário.
+                  </p>
                 </div>
               ) : (
                 <div className="team-list">
@@ -233,20 +280,36 @@ export const ControllerDashboard = () => {
                       <span className="departament-title">{adj.nome_cr}</span>
                       <div className="team-card-header">
                         <div className="employee-info">
-                          <span className="matricula">Colaborador: <strong>{adj.nome_completo}</strong></span>
-                          <span style={{ fontSize: "0.8rem", color: "#64748b" }}> · {adj.data_registro}</span>
+                          <span className="matricula">
+                            Colaborador: <strong>{adj.nome_completo}</strong>
+                          </span>
+                          <span
+                            style={{ fontSize: "0.8rem", color: "#64748b" }}
+                          >
+                            {" "}
+                            · {adj.data_registro}
+                          </span>
                         </div>
-                        <span className="badge pending">Aguarda Funcionário</span>
+                        <span className="badge pending">
+                          Aguarda Funcionário
+                        </span>
                       </div>
                       <DocumentTimeline status={adj.status} />
                       <div className="team-card-actions">
-                        <button className="btn-preview" onClick={() => setPreviewAdj(adj)}>👁️ Ver Doc</button>
+                        <button
+                          className="btn-preview"
+                          onClick={() => setPreviewAdj(adj)}
+                        >
+                          👁️ Ver Doc
+                        </button>
                         <button
                           className="btn-reminder"
                           disabled={sendingReminder === adj.username}
                           onClick={() => handleReminder(adj.username)}
                         >
-                          {sendingReminder === adj.username ? "⏳ Enviando..." : "🔔 Cobrar Funcionário"}
+                          {sendingReminder === adj.username
+                            ? "⏳ Enviando..."
+                            : "🔔 Cobrar Funcionário"}
                         </button>
                       </div>
                     </div>
@@ -262,7 +325,10 @@ export const ControllerDashboard = () => {
                 <div className="empty-state">
                   <div className="empty-icon">✅</div>
                   <h3>Nenhum pendente!</h3>
-                  <p>Sua controladoria não tem documentos aguardando o gestor aprovar.</p>
+                  <p>
+                    Sua controladoria não tem documentos aguardando o gestor
+                    aprovar.
+                  </p>
                 </div>
               ) : (
                 <div className="team-list">
@@ -271,14 +337,28 @@ export const ControllerDashboard = () => {
                       <span className="departament-title">{adj.nome_cr}</span>
                       <div className="team-card-header">
                         <div className="employee-info">
-                          <span className="matricula">Colaborador: <strong>{adj.nome_completo}</strong></span>
-                          <span style={{ fontSize: "0.8rem", color: "#64748b" }}> · Gestor: {adj.nome_chefia}</span>
+                          <span className="matricula">
+                            Colaborador: <strong>{adj.nome_completo}</strong>
+                          </span>
+                          <span
+                            style={{ fontSize: "0.8rem", color: "#64748b" }}
+                          >
+                            {" "}
+                            · Gestor: {adj.nome_chefia}
+                          </span>
                         </div>
-                        <span className="badge pending-supervisor">Aguarda Gestor</span>
+                        <span className="badge pending-supervisor">
+                          Aguarda Gestor
+                        </span>
                       </div>
                       <DocumentTimeline status={adj.status} />
                       <div className="team-card-actions">
-                        <button className="btn-preview" onClick={() => setPreviewAdj(adj)}>👁️ Ver Doc</button>
+                        <button
+                          className="btn-preview"
+                          onClick={() => setPreviewAdj(adj)}
+                        >
+                          👁️ Ver Doc
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -291,13 +371,31 @@ export const ControllerDashboard = () => {
             <div className="history-container">
               <div className="history-filters">
                 <label className="filter-label">Filtrar por:</label>
-                <select className="filter-select" value={filterMonth} onChange={(e) => setFilterMonth(Number(e.target.value))}>
-                  {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
+                <select
+                  className="filter-select"
+                  value={filterMonth}
+                  onChange={(e) => setFilterMonth(Number(e.target.value))}
+                >
+                  {MONTHS.map((m, i) => (
+                    <option key={i} value={i}>
+                      {m}
+                    </option>
+                  ))}
                 </select>
-                <select className="filter-select" value={filterYear} onChange={(e) => setFilterYear(Number(e.target.value))}>
-                  {years.map((y) => <option key={y} value={y}>{y}</option>)}
+                <select
+                  className="filter-select"
+                  value={filterYear}
+                  onChange={(e) => setFilterYear(Number(e.target.value))}
+                >
+                  {years.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
                 </select>
-                <span className="filter-result">{history.length} documento(s)</span>
+                <span className="filter-result">
+                  {history.length} documento(s)
+                </span>
               </div>
               {history.length === 0 ? (
                 <div className="empty-state">
@@ -320,11 +418,25 @@ export const ControllerDashboard = () => {
                       <tr key={adj.id}>
                         <td className="history-date">{adj.data_registro}</td>
                         <td>{adj.nome_completo}</td>
-                        <td style={{ color: "#64748b", fontSize: "0.85rem" }}>{adj.nome_cr}</td>
-                        <td><span className="badge success">✓ Concluído</span></td>
+                        <td style={{ color: "#64748b", fontSize: "0.85rem" }}>
+                          {adj.nome_cr}
+                        </td>
+                        <td>
+                          <span className="badge success">✓ Concluído</span>
+                        </td>
                         <td className="history-actions">
-                          <button className="btn-preview" onClick={() => setPreviewAdj(adj)}>🔍 Vis.</button>
-                          <button className="btn-secondary outline-btn" onClick={() => triggerPdf(adj)}>📄 PDF</button>
+                          <button
+                            className="btn-preview"
+                            onClick={() => setPreviewAdj(adj)}
+                          >
+                            🔍 Vis.
+                          </button>
+                          <button
+                            className="btn-secondary outline-btn"
+                            onClick={() => triggerPdf(adj)}
+                          >
+                            📄 PDF
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -347,39 +459,89 @@ export const ControllerDashboard = () => {
           data={printingAdjustment.data_registro || ""}
           id={printingAdjustment.matricula || ""}
           batidasOriginais={parseBatidas(printingAdjustment.batidas_originais)}
-          batidasCorrigidas={parseBatidas(printingAdjustment.batidas_corrigidas)}
+          batidasCorrigidas={parseBatidas(
+            printingAdjustment.batidas_corrigidas,
+          )}
           missedPunches={parseMarcacoes(printingAdjustment.marcacoes_faltantes)}
           justificativa={printingAdjustment.justificativa || ""}
           isAprovado={printingAdjustment.status === "CONCLUIDO"}
-          abonado={printingAdjustment.abonado === 1 ? true : printingAdjustment.abonado === 0 ? false : null}
+          abonado={
+            printingAdjustment.abonado === 1
+              ? true
+              : printingAdjustment.abonado === 0
+                ? false
+                : null
+          }
           assinaturaColaboradorData={printingAdjustment.employee_signature_date}
           assinaturaGestorData={printingAdjustment.supervisor_signature_date}
           signatureFont={printingAdjustment.signature_font}
           signatoryName={printingAdjustment.nome_completo}
           supervisorFont={printingAdjustment.supervisor_signature_font}
-          supervisorName={printingAdjustment.nome_chefia_completo || printingAdjustment.nome_chefia}
+          supervisorName={
+            printingAdjustment.nome_chefia_completo ||
+            printingAdjustment.nome_chefia
+          }
         />
       )}
 
       {/* History preview modal */}
       {previewAdj && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: "1060px", width: "95%" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+          <div
+            className="modal-content"
+            style={{ maxWidth: "1060px", width: "95%" }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "1.25rem",
+              }}
+            >
               <div>
-                <h3 style={{ margin: 0 }}>🗄️ Visualização do Documento (Controladoria)</h3>
-                <p style={{ color: "#64748b", fontSize: "0.85rem", margin: "0.25rem 0 0" }}>
+                <h3 style={{ margin: 0 }}>
+                  🗄️ Visualização do Documento (Controladoria)
+                </h3>
+                <p
+                  style={{
+                    color: "#64748b",
+                    fontSize: "0.85rem",
+                    margin: "0.25rem 0 0",
+                  }}
+                >
                   {previewAdj.data_registro} · {previewAdj.nome_completo}
                 </p>
               </div>
-              <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "0.75rem",
+                  alignItems: "center",
+                }}
+              >
                 {previewAdj.anexo_path && (
-                  <button className="btn-secondary outline-btn" onClick={() => handleViewAttachment(previewAdj.id)}>📎 Ver Anexo</button>
+                  <button
+                    className="btn-secondary outline-btn"
+                    onClick={() => handleViewAttachment(previewAdj.id)}
+                  >
+                    📎 Ver Anexo
+                  </button>
                 )}
                 {previewAdj.status === "CONCLUIDO" && (
-                  <button className="btn-secondary outline-btn" onClick={() => triggerPdf(previewAdj)}>📄 Baixar PDF</button>
+                  <button
+                    className="btn-secondary outline-btn"
+                    onClick={() => triggerPdf(previewAdj)}
+                  >
+                    📄 Baixar PDF
+                  </button>
                 )}
-                <button className="btn-secondary" onClick={() => setPreviewAdj(null)}>✕ Fechar</button>
+                <button
+                  className="btn-secondary"
+                  onClick={() => setPreviewAdj(null)}
+                >
+                  ✕ Fechar
+                </button>
               </div>
             </div>
             <div className="punch-doc-scaler-wrapper">
@@ -392,18 +554,28 @@ export const ControllerDashboard = () => {
                   data={previewAdj.data_registro || ""}
                   id={previewAdj.matricula || ""}
                   batidasOriginais={parseBatidas(previewAdj.batidas_originais)}
-                  batidasCorrigidas={parseBatidas(previewAdj.batidas_corrigidas)}
+                  batidasCorrigidas={parseBatidas(
+                    previewAdj.batidas_corrigidas,
+                  )}
                   missedPunches={parseMarcacoes(previewAdj.marcacoes_faltantes)}
                   justificativa={previewAdj.justificativa || ""}
                   isAprovado={previewAdj.status === "CONCLUIDO"}
-                  abonado={previewAdj.abonado === 1 ? true : previewAdj.abonado === 0 ? false : null}
+                  abonado={
+                    previewAdj.abonado === 1
+                      ? true
+                      : previewAdj.abonado === 0
+                        ? false
+                        : null
+                  }
                   assinaturaColaboradorData={previewAdj.employee_signature_date}
                   assinaturaGestorData={previewAdj.supervisor_signature_date}
                   hashValidacao={previewAdj.hash_validacao}
                   signatureFont={previewAdj.signature_font}
                   signatoryName={previewAdj.nome_completo}
                   supervisorFont={previewAdj.supervisor_signature_font}
-                  supervisorName={previewAdj.nome_chefia_completo || previewAdj.nome_chefia}
+                  supervisorName={
+                    previewAdj.nome_chefia_completo || previewAdj.nome_chefia
+                  }
                 />
               </div>
             </div>
