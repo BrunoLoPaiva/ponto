@@ -71,10 +71,10 @@ async function initSchema(db) {
   if (temTemplates.count === 0) {
     await db.exec(`
       INSERT INTO email_templates (tipo, assunto, corpo) VALUES
-      ('NOVO_AJUSTE_COLABORADOR', 'Ação Necessária: Justificativa de Ponto', 'Olá, <strong>{{nome}}</strong>.<br><br>O RH disponibilizou um novo formulário de justificativa de não marcação de ponto que requer a sua assinatura digital.'),
-      ('NOVO_AJUSTE_CHEFIA', 'Aprovação Pendente: Ponto de {{nome}}', 'Olá, gestor.<br><br>O colaborador <strong>{{nome}}</strong> preencheu e assinou uma justificativa de ponto. Acesse o painel da sua equipe para avaliar.'),
-      ('LEMBRETE_PENDENCIA', 'LEMBRETE: Assinatura de Ponto Pendente', 'Olá, <strong>{{nome}}</strong>.<br><br>Verificamos que você possui formulários de ponto pendentes de assinatura. Por favor, regularize o quanto antes para não impactar o fechamento.'),
-      ('NOVO_AJUSTE_CONTROLADOR', 'Aviso de Auditoria: Novos Ajustes na sua Área', 'Olá, Controlador(a).<br><br>Informamos que novos formulários de ajuste de ponto foram gerados para os colaboradores das áreas sob a sua supervisão. Acompanhe o progresso no sistema.')
+      ('NOVO_AJUSTE_COLABORADOR', 'Ação Requerida: Assinatura de Justificativa de Ponto', 'Prezado(a) {{nome}},<br><br>Informamos que um novo formulário de justificativa de não marcação de ponto foi gerado e requer a sua validação e assinatura digital.<br><br>Por favor, acesse o sistema para revisar os dados e concluir o processo o mais breve possível.'),
+      ('NOVO_AJUSTE_CHEFIA', 'Aprovação Pendente: Justificativa de Ponto - {{nome}}', 'Prezado(a) Gestor(a),<br><br>O(a) colaborador(a) {{nome}} preencheu e assinou digitalmente uma justificativa de não marcação de ponto.<br><br>A solicitação encontra-se disponível no seu painel para análise e assinatura.'),
+      ('LEMBRETE_PENDENCIA', 'Lembrete: Pendência de Assinatura de Ponto', 'Prezado(a) {{nome}},<br><br>Este é um lembrete automático de que você possui formulários de justificativa de ponto aguardando a sua assinatura digital no sistema.<br><br>Solicitamos a gentileza de regularizar esta pendência com urgência, a fim de evitar impactos no fechamento da folha de pagamento.'),
+      ('NOVO_AJUSTE_CONTROLADOR', 'Notificação: Novos Registros de Ponto para Colaboradores da sua Área', 'Prezado(a) Controlador(a),<br><br>Notificamos que novos formulários de ajuste de ponto foram gerados para os colaboradores alocados nas áreas sob a sua supervisão.<br><br>O progresso das assinaturas e aprovações pode ser acompanhado diretamente pelo seu painel de controle.')
     `);
   }
 

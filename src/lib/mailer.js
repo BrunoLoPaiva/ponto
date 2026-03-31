@@ -8,91 +8,78 @@ const transporter = nodemailer.createTransport({
   tls: { rejectUnauthorized: false },
 });
 
-const SYSTEM_EMAIL = '"Ajuste de Ponto" <ponto@viarondon.com.br>';
+const SYSTEM_EMAIL = '"RH ViaRondon" <ponto@viarondon.com.br>';
 const DOMAIN = "@viarondon.com.br";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 const generateEmailHtml = (titulo, mensagem) => `
-<div style="margin:0; padding:0; background-color:#f4f6f8; font-family: Arial, sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f8; padding: 30px 0;">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${titulo}</title>
+  </head>
+<body style="margin: 0; padding: 0; background-color: #f1f5f9; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+  
+  <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #f1f5f9; margin: 0; padding: 0; width: 100%;">
     <tr>
-      <td align="center">
+      <td align="center" style="padding: 40px 15px;">
         
-        <!-- Container -->
-        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;">
+        <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
           
-          <!-- Header -->
           <tr>
-            <td style="background-color:#0078d4; padding:20px;">
-              <span style="color:#ffffff; font-size:20px; font-weight:bold;">
+            <td align="center" style="background-color: #1e1b4b; padding: 35px 20px; border-bottom: 4px solid #4f46e5;">
+              <h1 style="color: #ffffff; font-family: Arial, sans-serif; font-size: 24px; margin: 0; font-weight: bold; text-align: center; letter-spacing: -0.5px;">
+                ViaRondon
+              </h1>
+              <p style="color: #c7d2fe; font-family: Arial, sans-serif; font-size: 14px; margin: 5px 0 0 0; text-align: center; font-weight: 500;">
+                Gestão de Ponto Eletrônico
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 40px 40px 15px 40px; text-align: center;">
+              <h2 style="color: #0f172a; font-family: Arial, sans-serif; font-size: 20px; margin: 0; font-weight: bold;">
                 ${titulo}
-              </span>
+              </h2>
             </td>
           </tr>
 
-          <!-- Body -->
           <tr>
-            <td style="padding:30px; color:#333333; font-size:15px; line-height:1.6;">
+            <td style="padding: 0 40px 30px 40px; color: #475569; font-family: Arial, sans-serif; font-size: 16px; line-height: 1.6; text-align: left;">
               ${mensagem}
+            </td>
+          </tr>
 
-              <!-- Button -->
-              <div style="text-align:center; margin-top:30px;">
-
-                <!--[if mso]>
-                <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml"
-                  href="${APP_URL}"
-                  style="height:45px;v-text-anchor:middle;width:220px;"
-                  arcsize="10%"
-                  strokecolor="#0078d4"
-                  fillcolor="#0078d4">
-                  <w:anchorlock/>
-                  <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;">
-                    Acessar Sistema
-                  </center>
-                </v:roundrect>
-                <![endif]-->
-
-                <!--[if !mso]><!-- -->
-                <a href="${APP_URL}"
-                  style="display:inline-block;
-                         background-color:#0078d4;
-                         color:#ffffff;
-                         font-size:15px;
-                         font-weight:bold;
-                         line-height:45px;
-                         text-align:center;
-                         text-decoration:none;
-                         width:220px;
-                         border-radius:5px;">
-                  Acessar Sistema
+          <tr>
+            <td align="center" style="padding: 10px 40px 45px 40px;">
+              <div>
+                <a href="${APP_URL}" style="background-color:#4f46e5; border-radius:5px; color:#ffffff; display:inline-block; font-family:Arial, sans-serif; font-size:16px; font-weight:bold; line-height:48px; text-align:center; text-decoration:none; width:260px; -webkit-text-size-adjust:none;">
+                  Acessar Plataforma
                 </a>
-                <!--<![endif]-->
-
-              </div>
+                </div>
             </td>
           </tr>
 
-          <!-- Divider -->
           <tr>
-            <td style="padding:0 30px;">
-              <hr style="border:none; border-top:1px solid #eaeaea;">
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="padding:20px; text-align:center; font-size:12px; color:#999999;">
-              Este é um e-mail automático do Sistema de Assinatura ViaRondon.<br>
-              Por favor, não responda este e-mail.
+            <td style="background-color: #f8fafc; padding: 25px 40px; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="color: #64748b; font-family: Arial, sans-serif; font-size: 12px; line-height: 1.5; margin: 0;">
+                Este é um aviso automático gerado pelo <strong>Sistema de Assinatura ViaRondon</strong>.<br>
+                Por favor, não responda a este e-mail. Caso tenha dúvidas, procure o departamento de Recursos Humanos.
+              </p>
             </td>
           </tr>
 
         </table>
-
-      </td>
+        
+        </td>
     </tr>
   </table>
-</div>
+
+</body>
+</html>
 `;
 
 /**
@@ -106,20 +93,15 @@ async function dispararEmail(usernameTarget, nomeTarget, tipoTemplate) {
     const db = await getDb();
     const template = await db.get(
       "SELECT * FROM email_templates WHERE tipo = ?",
-      [tipoTemplate],
+      [tipoTemplate]
     );
     if (!template) {
-      console.warn(
-        `[mailer] Template "${tipoTemplate}" não encontrado no banco.`,
-      );
+      console.warn(`[mailer] Template "${tipoTemplate}" não encontrado no banco.`);
       return;
     }
 
-    const assuntoPersonalizado = template.assunto.replace(
-      /{{nome}}/g,
-      nomeTarget,
-    );
-    const corpoPersonalizado = template.corpo.replace(/{{nome}}/g, nomeTarget);
+    const assuntoPersonalizado = template.assunto.replace(/{{nome}}/g, nomeTarget);
+    const corpoPersonalizado = template.corpo.replace(/{{nome}}/g, `<strong>${nomeTarget}</strong>`);
 
     await transporter.sendMail({
       from: SYSTEM_EMAIL,
@@ -128,14 +110,11 @@ async function dispararEmail(usernameTarget, nomeTarget, tipoTemplate) {
       html: generateEmailHtml(assuntoPersonalizado, corpoPersonalizado),
     });
   } catch (error) {
-    console.error(
-      `[mailer] Erro ao enviar [${tipoTemplate}] para ${email}:`,
-      error,
-    );
+    console.error(`[mailer] Erro ao enviar [${tipoTemplate}] para ${email}:`, error);
   }
 }
 
-// ── Exportações limpas ──────────────────────────────────────────────────────
+// ── Exportações ─────────────────────────────────────────────────────────────
 export const notifyEmployee = (username, nome) =>
   dispararEmail(username, nome, "NOVO_AJUSTE_COLABORADOR");
 export const notifySupervisor = (username, nome) =>
