@@ -19,7 +19,6 @@ export async function POST(req) {
     const abonadoInt = abonado === true ? 1 : abonado === false ? 0 : null;
     const now = new Date().toISOString();
 
-    // 1. Dados de Auditoria do Gestor
     const ipSupervisor =
       req.headers.get("x-forwarded-for") ||
       req.headers.get("x-real-ip") ||
@@ -27,15 +26,18 @@ export async function POST(req) {
     const userAgentSupervisor =
       req.headers.get("user-agent") || "Navegador Desconhecido";
 
-    // 2. Geração do Código de Autenticidade (Hash Único)
     const hashValidacao = crypto.randomUUID();
+
+    // Se user.name for nulo ou for igual ao login (com ponto), usamos null para forçar o sistema a usar o nome da planilha.
+    const nomeChefiaValido = user.name && !user.name.includes('.') ? user.name : null;
 
     const db = await getDb();
     const result = await db.run(
       `UPDATE punch_adjustments 
        SET supervisor_signature_date = ?, abonado = ?, status = 'CONCLUIDO',
            ip_supervisor = ?, user_agent_supervisor = ?, hash_validacao = ?,
-           supervisor_signature_font = ?, nome_chefia_completo = ?
+           supervisor_signature_font = ?, 
+           nome_chefia_completo = COALESCE(?, nome_chefia)
        WHERE id = ? AND status = 'PENDENTE_CHEFIA' AND nome_chefia LIKE ?`,
       [
         now,
@@ -44,9 +46,9 @@ export async function POST(req) {
         userAgentSupervisor,
         hashValidacao,
         supervisor_font || null,
-        user.name || user.username,
+        nomeChefiaValido,
         id,
-        `%${user.username}%`,
+        `%${user.username.split(".")[0]}%`, // Deixa a busca flexível para aprovação
       ],
     );
 

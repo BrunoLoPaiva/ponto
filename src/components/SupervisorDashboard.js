@@ -729,7 +729,7 @@ export const SupervisorDashboard = () => {
                   signatureFont={selectedAdjustment.signature_font}
                   signatoryName={selectedAdjustment.nome_completo || ""}
                   supervisorFont={supervisorFont}
-                  supervisorName={user?.name || user?.username || ""}
+                  supervisorName={user?.name && !user?.name?.includes('.') ? user.name : selectedAdjustment.nome_chefia}
                 />
               </div>
             </div>
@@ -748,8 +748,8 @@ export const SupervisorDashboard = () => {
                     style={{ fontFamily: f.id }}
                   >
                     <span className="font-preview" style={{ fontFamily: f.id }}>
-                      {user?.name?.split(" ")[0] || "Gestor"}
-                    </span>
+  {(user?.name && !user?.name?.includes('.') ? user.name : selectedAdjustment.nome_chefia)?.split(" ")[0] || "Gestor"}
+</span>
                     <span className="font-label">{f.label}</span>
                   </button>
                 ))}

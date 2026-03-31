@@ -47,7 +47,6 @@ export async function POST(req) {
       );
     }
 
-    // Limite de Memória Rigoroso contra OOM (máx 5MB)
     if (file.size > 5 * 1024 * 1024) {
       return NextResponse.json(
         { error: "O arquivo excede o limite de memória (5MB)." },
@@ -68,13 +67,14 @@ export async function POST(req) {
     let duplicatedCount = 0;
 
     const funcionariosNotificados = new Map();
-    const controladoresNotificados = new Set(); // deduplica por controlador
+    const controladoresNotificados = new Set();
 
     for (const row of data) {
       const nomeCompleto = row["Nome"] || row["Funcionário"] || "";
       if (!nomeCompleto) continue;
 
       const nomeCr = row["Nome CR"] || row["Departamento"] || "";
+      // Pegamos o nome exato da chefia:
       const nomeChefiaStr = row["Nome Chefia"] || row["Nome Gestor"] || "";
       const nomeControladorStr =
         row["NOME CONTROLADOR"] || row["Nome Controlador"] || "";
@@ -87,7 +87,6 @@ export async function POST(req) {
       const dia = row["Dia"] || row["DIA"] || "";
 
       const usernameFuncionario = generateUsername(nomeCompleto);
-      const usernameChefia = generateUsername(nomeChefiaStr);
       const usernameControlador = generateUsername(nomeControladorStr);
 
       let batidas = [];
@@ -120,7 +119,7 @@ export async function POST(req) {
       `,
         [
           nomeCr,
-          usernameChefia || nomeChefiaStr,
+          nomeChefiaStr, // CORREÇÃO: Salva o nome COMPLETO do Gestor
           usernameControlador || nomeControladorStr,
           matricula,
           nomeCompleto.toUpperCase(),
@@ -141,7 +140,6 @@ export async function POST(req) {
         }
       }
 
-      // Agrupa controladores para disparar apenas 1 e-mail por controlador por upload
       if (usernameControlador) {
         controladoresNotificados.add(usernameControlador);
       }
@@ -155,7 +153,6 @@ export async function POST(req) {
       );
     });
 
-    // Dispara 1 e-mail por controlador com aviso de novos ajustes na sua área
     controladoresNotificados.forEach((usernameControlador) => {
       emailPromises.push(
         notifyController(usernameControlador).catch(console.error),

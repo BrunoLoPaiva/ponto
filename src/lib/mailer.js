@@ -8,7 +8,7 @@ const transporter = nodemailer.createTransport({
   tls: { rejectUnauthorized: false },
 });
 
-const SYSTEM_EMAIL = '"RH ViaRondon" <ponto@viarondon.com.br>';
+const SYSTEM_EMAIL = '"Ajuste de Ponto" <ponto@viarondon.com.br>';
 const DOMAIN = "@viarondon.com.br";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -19,64 +19,89 @@ const generateEmailHtml = (titulo, mensagem) => `
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${titulo}</title>
-  </head>
-<body style="margin: 0; padding: 0; background-color: #f1f5f9; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
-  
-  <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #f1f5f9; margin: 0; padding: 0; width: 100%;">
-    <tr>
-      <td align="center" style="padding: 40px 15px;">
-        
-        <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-          
-          <tr>
-            <td align="center" style="background-color: #1e1b4b; padding: 35px 20px; border-bottom: 4px solid #4f46e5;">
-              <h1 style="color: #ffffff; font-family: Arial, sans-serif; font-size: 24px; margin: 0; font-weight: bold; text-align: center; letter-spacing: -0.5px;">
-                ViaRondon
-              </h1>
-              <p style="color: #c7d2fe; font-family: Arial, sans-serif; font-size: 14px; margin: 5px 0 0 0; text-align: center; font-weight: 500;">
-                Gestão de Ponto Eletrônico
-              </p>
-            </td>
-          </tr>
+</head>
 
-          <tr>
-            <td style="padding: 40px 40px 15px 40px; text-align: center;">
-              <h2 style="color: #0f172a; font-family: Arial, sans-serif; font-size: 20px; margin: 0; font-weight: bold;">
-                ${titulo}
-              </h2>
-            </td>
-          </tr>
+<body style="margin:0; padding:0; background-color:#f1f5f9; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%;">
 
-          <tr>
-            <td style="padding: 0 40px 30px 40px; color: #475569; font-family: Arial, sans-serif; font-size: 16px; line-height: 1.6; text-align: left;">
-              ${mensagem}
-            </td>
-          </tr>
+<div style="display:none; max-height:0; overflow:hidden; font-size:1px; line-height:1px; color:#ffffff; opacity:0;">
+  Você tem uma assinatura pendente no sistema.
+</div>
 
-          <tr>
-            <td align="center" style="padding: 10px 40px 45px 40px;">
-              <div>
-                <a href="${APP_URL}" style="background-color:#4f46e5; border-radius:5px; color:#ffffff; display:inline-block; font-family:Arial, sans-serif; font-size:16px; font-weight:bold; line-height:48px; text-align:center; text-decoration:none; width:260px; -webkit-text-size-adjust:none;">
-                  Acessar Plataforma
-                </a>
-                </div>
-            </td>
-          </tr>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1f5f9; table-layout:fixed;">
+  <tr>
+    <td align="center" style="padding: 20px 10px;">
 
-          <tr>
-            <td style="background-color: #f8fafc; padding: 25px 40px; border-top: 1px solid #e2e8f0; text-align: center;">
-              <p style="color: #64748b; font-family: Arial, sans-serif; font-size: 12px; line-height: 1.5; margin: 0;">
-                Este é um aviso automático gerado pelo <strong>Sistema de Assinatura ViaRondon</strong>.<br>
-                Por favor, não responda a este e-mail. Caso tenha dúvidas, procure o departamento de Recursos Humanos.
-              </p>
-            </td>
-          </tr>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px; background-color:#ffffff; border:1px solid #e2e8f0; margin:0 auto;">
 
-        </table>
-        
-        </td>
-    </tr>
-  </table>
+        <tr>
+          <td align="center" style="background-color:#1e1b4b; padding:30px 20px;">
+            <span style="color:#ffffff; font-family:Arial, sans-serif; font-size:22px; font-weight:bold;">
+              ViaRondon
+            </span>
+            <br>
+            <span style="color:#c7d2fe; font-family:Arial, sans-serif; font-size:13px;">
+              Gestão de Ponto Eletrônico
+            </span>
+          </td>
+        </tr>
+
+        <tr><td height="30" style="font-size:1px; line-height:1px;">&nbsp;</td></tr>
+
+        <tr>
+          <td align="center" style="padding:0 30px;">
+            <span style="font-family:Arial, sans-serif; font-size:20px; color:#0f172a; font-weight:bold;">
+              ${titulo}
+            </span>
+          </td>
+        </tr>
+
+        <tr><td height="15" style="font-size:1px; line-height:1px;">&nbsp;</td></tr>
+
+        <tr>
+          <td style="padding:0 30px; font-family:Arial, sans-serif; font-size:15px; color:#475569; line-height:1.6;">
+            ${mensagem}
+          </td>
+        </tr>
+
+        <tr><td height="30" style="font-size:1px; line-height:1px;">&nbsp;</td></tr>
+
+        <tr>
+          <td align="center">
+
+            <a href="${APP_URL}"
+              style="display:inline-block;
+                     background-color:#0078d4;
+                     color:#ffffff;
+                     font-family:Arial,sans-serif;
+                     font-size:15px;
+                     font-weight:bold;
+                     text-decoration:none;
+                     text-align:center;
+                     line-height:45px;
+                     width:220px;
+                     border-radius:4px;
+                     -webkit-text-size-adjust:none;">
+              Acessar Sistema
+            </a>
+            </td>
+        </tr>
+
+        <tr><td height="40" style="font-size:1px; line-height:1px;">&nbsp;</td></tr>
+
+        <tr>
+          <td style="background-color:#f8fafc; padding:20px 30px; border-top:1px solid #e2e8f0; text-align:center;">
+            <span style="font-family:Arial, sans-serif; font-size:12px; color:#64748b; line-height:1.5;">
+              Este é um aviso automático do <strong>Sistema ViaRondon</strong>.<br>
+              Não responda este e-mail. Em caso de dúvidas, procure o RH.
+            </span>
+          </td>
+        </tr>
+
+      </table>
+
+      </td>
+  </tr>
+</table>
 
 </body>
 </html>
