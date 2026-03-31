@@ -12,13 +12,25 @@ export default function Home() {
   const { isAuthenticated, user, logout } = useAuth();
   const [activeTab, setActiveTab] = React.useState("meu-ponto");
 
-  if (!isAuthenticated) {
-    return <Login />;
-  }
-
+  // 1. Variáveis movidas para cima (antes do early return)
   const isRh         = user?.role === "RH";
   const isSupervisor = user?.isSupervisor;
   const isController = user?.isController;
+
+  // 2. useEffect movido para cima (antes do early return)
+  React.useEffect(() => {
+    // Só atualiza a aba caso esteja autenticado
+    if (isAuthenticated) {
+      if (isRh) setActiveTab("rh");
+      else if (isSupervisor) setActiveTab("supervisor");
+      else if (isController) setActiveTab("controller");
+    }
+  }, [isAuthenticated, isRh, isSupervisor, isController]);
+
+  // 3. O early return (retorno antecipado) deve vir DEPOIS dos hooks
+  if (!isAuthenticated) {
+    return <Login />;
+  }
 
   // Define available tabs based on roles
   const tabs = [
@@ -34,13 +46,6 @@ export default function Home() {
   if (isRh) {
     tabs.push({ id: "rh", label: "Painel RH", icon: "🏢" });
   }
-
-  // Effect to set initial tab if user has roles
-  React.useEffect(() => {
-    if (isRh) setActiveTab("rh");
-    else if (isSupervisor) setActiveTab("supervisor");
-    else if (isController) setActiveTab("controller");
-  }, [isRh, isSupervisor, isController]);
 
   return (
     <div className="App">
