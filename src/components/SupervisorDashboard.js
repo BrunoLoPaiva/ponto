@@ -79,7 +79,7 @@ export const SupervisorDashboard = () => {
     };
 
     fetchTeamAdjustments();
-    const interval = setInterval(fetchTeamAdjustments, 15000);
+    const interval = setInterval(fetchTeamAdjustments, 1000);
     return () => {
       isMounted = false;
       clearInterval(interval);

@@ -93,7 +93,7 @@ export const EmployeeDashboard = ({ hideHeader = false }) => {
     };
 
     fetchAdjustments();
-    const interval = setInterval(fetchAdjustments, 15000);
+    const interval = setInterval(fetchAdjustments, 1000);
     return () => {
       isMounted = false;
       clearInterval(interval);

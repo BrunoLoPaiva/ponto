@@ -76,7 +76,7 @@ export async function POST(req) {
       const nomeCr = row["Nome CR"] || row["Departamento"] || "";
       // Pegamos o nome exato da chefia:
       const nomeChefiaStr = row["Nome Chefia"] || row["Nome Gestor"] || "";
-      const nomeControladorStr =
+      let nomeControladorStr =
         row["NOME CONTROLADOR"] || row["Nome Controlador"] || "";
       let matricula = String(row["Matrícula"] || row["Matricula"] || "")
         .trim()
@@ -87,7 +87,14 @@ export async function POST(req) {
       const dia = row["Dia"] || row["DIA"] || "";
 
       const usernameFuncionario = generateUsername(nomeCompleto);
-      const usernameControlador = generateUsername(nomeControladorStr);
+      let usernameControlador = generateUsername(nomeControladorStr);
+      const usernameChefia = generateUsername(nomeChefiaStr);
+
+      // REGRA DE PRIORIDADE: Se gestor e controlador forem a mesma pessoa, ignora como controlador
+      if (usernameChefia && usernameControlador && usernameChefia === usernameControlador) {
+        usernameControlador = "";
+        nomeControladorStr = "";
+      }
 
       let batidas = [];
       Object.keys(row)
@@ -120,7 +127,7 @@ export async function POST(req) {
         [
           nomeCr,
           nomeChefiaStr, // CORREÇÃO: Salva o nome COMPLETO do Gestor
-          usernameControlador || nomeControladorStr,
+          usernameControlador || nomeControladorStr, // Pode ficar vazio devido à regra acima
           matricula,
           nomeCompleto.toUpperCase(),
           usernameFuncionario,
@@ -159,6 +166,7 @@ export async function POST(req) {
       );
     });
 
+    // Dispara os e-mails em segundo plano sem travar a resposta HTTP
     Promise.all(emailPromises).catch((err) => 
       console.error("Erro no envio de emails em background:", err)
     );

@@ -217,7 +217,7 @@ export const RhDashboard = () => {
     };
 
     fetchAll();
-    const iv = setInterval(fetchAll, 20000);
+    const iv = setInterval(fetchAll, 1000);
     return () => {
       isMounted = false;
       clearInterval(iv);
