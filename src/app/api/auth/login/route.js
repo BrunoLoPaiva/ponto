@@ -4,7 +4,9 @@ import { generateToken } from "@/lib/jwt";
 
 export async function POST(req) {
   try {
-    const { username, password } = await req.json();
+    let { username, password } = await req.json();
+
+    username = username.toLowerCase().trim().split("@")[0];
 
     if (!username || !password) {
       return NextResponse.json(
