@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Sistema de Ponto — ViaRondon",
+  title: "Ajuste de Ponto — ViaRondon",
   description: "Ajuste de Ponto - ViaRondon",
 };
 

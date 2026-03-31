@@ -6,16 +6,28 @@ import { EmployeeDashboard } from "@/components/EmployeeDashboard";
 import { SupervisorDashboard } from "@/components/SupervisorDashboard";
 import { RhDashboard } from "@/components/RhDashboard";
 import { ControllerDashboard } from "@/components/ControllerDashboard";
+import Image from "next/image";
 import "@/components/App.css";
+import { useState, useEffect } from "react";
 
 export default function Home() {
   const { isAuthenticated, user, logout } = useAuth();
   const [activeTab, setActiveTab] = React.useState("meu-ponto");
 
   // 1. Variáveis movidas para cima (antes do early return)
-  const isRh         = user?.role === "RH";
+  const isRh = user?.role === "RH";
   const isSupervisor = user?.isSupervisor;
   const isController = user?.isController;
+
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 768 : false,
+  );
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // 2. useEffect movido para cima (antes do early return)
   React.useEffect(() => {
@@ -33,9 +45,7 @@ export default function Home() {
   }
 
   // Define available tabs based on roles
-  const tabs = [
-    { id: "meu-ponto", label: "Meu Ponto", icon: "👤" },
-  ];
+  const tabs = [{ id: "meu-ponto", label: "Meu Ponto", icon: "👤" }];
 
   if (isSupervisor) {
     tabs.push({ id: "supervisor", label: "Gestão Supervisor", icon: "👥" });
@@ -51,9 +61,25 @@ export default function Home() {
     <div className="App">
       <nav className="top-nav">
         <div className="nav-brand">
-          <h1>Sistema de Ponto</h1>
+          <Image
+            src="/calendar.png"
+            alt="Logo"
+            width={30}
+            height={30}
+            priority
+          />
+          <h2
+            style={{
+              display: isMobile ? "none" : "block", // A mágica acontece aqui
+              float: "right",
+              marginLeft: "8px",
+              color: "#4675ea",
+            }}
+          >
+            Ajuste de <span style={{ color: "#2fc57e" }}>Ponto </span>
+          </h2>
         </div>
-        
+
         <div className="nav-tabs-global">
           {tabs.map((tab) => (
             <button
@@ -69,8 +95,10 @@ export default function Home() {
 
         <div className="nav-user">
           <div className="user-info-box">
-             <span className="user-greeting">Olá, {user?.name || user?.username}</span>
-             {/* <span className="user-role-badge">{user?.role}</span> */}
+            <span className="user-greeting">
+              Olá, {user?.name || user?.username}
+            </span>
+            {/* <span className="user-role-badge">{user?.role}</span> */}
           </div>
           <button className="btn-logout" onClick={logout}>
             Sair

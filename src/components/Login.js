@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import Image from "next/image";
 import "./Login.css";
 
 export const Login = () => {
@@ -18,9 +19,7 @@ export const Login = () => {
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
 
@@ -29,7 +28,7 @@ export const Login = () => {
       if (response.ok && data.success) {
         login(data.token, data.user);
       } else {
-        setError(data.message || data.error || "Erro ao realizar login.");
+        setError(data.message || data.error || "Credenciais inválidas.");
       }
     } catch (err) {
       setError("Falha na comunicação com o servidor.");
@@ -39,14 +38,32 @@ export const Login = () => {
   };
 
   return (
-    <div className="login-container">
+    <div className="login-screen">
       <div className="login-card">
-        <div className="login-header">
-          <h2>Assinatura RH</h2>
-          <p>Acesse o sistema</p>
-        </div>
+        <header className="login-header">
+          <div className="logo-wrapper">
+            <Image
+              src="/calendar.png"
+              alt="Logo"
+              width={100}
+              height={100}
+              priority
+            />
+          </div>
+          <h1>
+            Ajuste de <span>Ponto </span>
+          </h1>
+          <p>
+            Faça login para gerenciar seus horários.{" "}
+            <span style={{ fontSize: "25px" }}>✍️</span>{" "}
+          </p>
+        </header>
 
-        {error && <div className="login-error">{error}</div>}
+        {error && (
+          <div className="login-error-box">
+            <span>{error}</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
@@ -56,7 +73,7 @@ export const Login = () => {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Digite seu usuário"
+              placeholder="Nome de usuário ou email"
               required
               autoComplete="username"
             />
@@ -69,20 +86,20 @@ export const Login = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Digite sua senha"
+              placeholder="••••••••"
               required
               autoComplete="current-password"
             />
           </div>
 
-          <button
-            type="submit"
-            className={`login-button ${loading ? "loading" : ""}`}
-            disabled={loading}
-          >
-            {loading ? "Entrando..." : "Entrar"}
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? <span className="loader"></span> : "Entrar no Sistema"}
           </button>
         </form>
+
+        <footer className="login-footer">
+          <p>© {new Date().getFullYear()} | ViaRondon</p>
+        </footer>
       </div>
     </div>
   );
