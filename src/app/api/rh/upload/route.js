@@ -159,7 +159,9 @@ export async function POST(req) {
       );
     });
 
-    await Promise.all(emailPromises);
+    Promise.all(emailPromises).catch((err) => 
+      console.error("Erro no envio de emails em background:", err)
+    );
 
     return NextResponse.json({
       success: true,
