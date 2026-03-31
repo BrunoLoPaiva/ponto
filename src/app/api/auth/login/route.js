@@ -57,6 +57,13 @@ export async function POST(req) {
       ? true
       : false;
 
+    dbUser.isController = (await db.get(
+      "SELECT 1 FROM punch_adjustments WHERE nome_controlador LIKE ? LIMIT 1",
+      [`%${username}%`],
+    ))
+      ? true
+      : false;
+
     const token = generateToken(dbUser);
     return NextResponse.json({ success: true, token, user: dbUser });
   } catch (error) {

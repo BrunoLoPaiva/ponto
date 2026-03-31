@@ -480,6 +480,8 @@ export const EmployeeDashboard = ({ hideHeader = false }) => {
           hashValidacao={printingAdjustment.hash_validacao}
           signatureFont={printingFont}
           signatoryName={printingAdjustment.nome_completo || user?.name || ""}
+          supervisorFont={printingAdjustment.supervisor_signature_font}
+          supervisorName={printingAdjustment.nome_chefia_completo || printingAdjustment.nome_chefia}
         />
       )}
 
@@ -571,6 +573,8 @@ export const EmployeeDashboard = ({ hideHeader = false }) => {
                 hashValidacao={previewAdjustment.hash_validacao}
                 signatureFont={previewAdjustment.signature_font}
                 signatoryName={previewAdjustment.nome_completo || ""}
+                supervisorFont={previewAdjustment.supervisor_signature_font}
+                supervisorName={previewAdjustment.nome_chefia_completo || previewAdjustment.nome_chefia}
               />
             </div>
           </div>

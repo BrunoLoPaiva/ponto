@@ -35,7 +35,7 @@ export async function POST(req) {
       `UPDATE punch_adjustments 
        SET supervisor_signature_date = ?, abonado = ?, status = 'CONCLUIDO',
            ip_supervisor = ?, user_agent_supervisor = ?, hash_validacao = ?,
-           supervisor_signature_font = ?
+           supervisor_signature_font = ?, nome_chefia_completo = ?
        WHERE id = ? AND status = 'PENDENTE_CHEFIA' AND nome_chefia LIKE ?`,
       [
         now,
@@ -44,6 +44,7 @@ export async function POST(req) {
         userAgentSupervisor,
         hashValidacao,
         supervisor_font || null,
+        user.name || user.username,
         id,
         `%${user.username}%`,
       ],

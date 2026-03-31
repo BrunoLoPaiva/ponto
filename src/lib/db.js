@@ -81,6 +81,7 @@ async function initSchema(db) {
   const migrations = [
     "ALTER TABLE punch_adjustments ADD COLUMN signature_font TEXT",
     "ALTER TABLE punch_adjustments ADD COLUMN supervisor_signature_font TEXT",
+    "ALTER TABLE punch_adjustments ADD COLUMN nome_chefia_completo TEXT",
     "ALTER TABLE punch_adjustments ADD COLUMN ip_funcionario TEXT",
     "ALTER TABLE punch_adjustments ADD COLUMN user_agent_funcionario TEXT",
     "ALTER TABLE punch_adjustments ADD COLUMN ip_supervisor TEXT",

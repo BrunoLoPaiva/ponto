@@ -1215,6 +1215,8 @@ export const RhDashboard = () => {
           assinaturaGestorData={printAdj.supervisor_signature_date}
           signatureFont={printAdj.signature_font}
           signatoryName={printAdj.nome_completo}
+          supervisorFont={printAdj.supervisor_signature_font}
+          supervisorName={printAdj.nome_chefia_completo || printAdj.nome_chefia}
         />
       )}
 
@@ -1290,6 +1292,8 @@ export const RhDashboard = () => {
                   assinaturaGestorData={previewAdj.supervisor_signature_date}
                   signatureFont={previewAdj.signature_font}
                   signatoryName={previewAdj.nome_completo}
+                  supervisorFont={previewAdj.supervisor_signature_font}
+                  supervisorName={previewAdj.nome_chefia_completo || previewAdj.nome_chefia}
                 />
               </div>
             </div>

@@ -49,7 +49,7 @@ export async function GET(req) {
       "Matrícula":       r.matricula,
       "Username":        r.username,
       "CR / Depto":      r.nome_cr,
-      "Gestor":          r.nome_chefia,
+      "Gestor":          r.nome_chefia_completo || r.nome_chefia,
       "Status":          STATUS_LABEL[r.status] ?? r.status,
       "Batidas Orig.":   r.batidas_originais,
       "Batidas Corrig.": r.batidas_corrigidas,

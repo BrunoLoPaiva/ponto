@@ -278,18 +278,9 @@ export const SupervisorDashboard = () => {
                 <span className="tab-badge">{totalPendentes}</span>
               )}
             </button>
-            <button
-              className={`tab-btn ${mainTab === "meu-ponto" ? "active" : ""}`}
-              onClick={() => setMainTab("meu-ponto")}
-            >
-              🗂️ Meu Ponto
-            </button>
           </div>
         </div>
       </header>
-
-      {/* ────── TAB: MEU PONTO (reutiliza EmployeeDashboard, sem header duplicado) ────── */}
-      {mainTab === "meu-ponto" && <EmployeeDashboard hideHeader />}
 
       {/* ────── TAB: MINHA EQUIPE ────── */}
       {mainTab === "team" && (
@@ -586,7 +577,7 @@ export const SupervisorDashboard = () => {
           signatureFont={printingAdjustment.signature_font}
           signatoryName={printingAdjustment.nome_completo}
           supervisorFont={printingAdjustment.supervisor_signature_font}
-          supervisorName={printingAdjustment.nome_chefia}
+          supervisorName={printingAdjustment.nome_chefia_completo || printingAdjustment.nome_chefia}
         />
       )}
 
@@ -675,7 +666,7 @@ export const SupervisorDashboard = () => {
                   signatureFont={previewAdj.signature_font}
                   signatoryName={previewAdj.nome_completo}
                   supervisorFont={previewAdj.supervisor_signature_font}
-                  supervisorName={previewAdj.nome_chefia}
+                  supervisorName={previewAdj.nome_chefia_completo || previewAdj.nome_chefia}
                 />
               </div>
             </div>

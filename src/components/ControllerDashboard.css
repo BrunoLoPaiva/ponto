@@ -1,0 +1,141 @@
+/* ═══════════════════════════════════════════════════════════════
+   ControllerDashboard.css
+   Shared shell styles (tab-bar, modal, badges, history) live in globals.css
+═══════════════════════════════════════════════════════════════ */
+
+.controller-mode .dashboard-header h2 {
+  color: var(--color-text-primary);
+}
+
+.controller-mode {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ── Status section ── */
+.status-section { margin-bottom: 2rem; }
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--color-border);
+}
+
+.section-count {
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  border: 1px solid var(--color-border);
+}
+
+/* ── Team list ── */
+.team-layout { display: flex; flex-direction: column; gap: 1rem; }
+
+.team-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1rem;
+}
+
+/* ── Team card ── */
+.team-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 1.1rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.action-card {
+  border-color: #c7d2fe;
+  box-shadow: 0 0 0 1px rgba(99,102,241,0.08), var(--shadow-sm);
+}
+
+.departament-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  font-weight: 700;
+  display: block;
+}
+
+.team-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.employee-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.matricula {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.team-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+/* ── Buttons ── */
+
+.btn-reminder {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius-md);
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex: 1;
+}
+.btn-reminder:hover:not(:disabled) { background: #ffedd5; border-color: #fb923c; }
+.btn-reminder:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════ */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .team-list {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .dashboard-header h2 { font-size: 1.2rem; }
+
+  .team-list { grid-template-columns: 1fr; gap: 0.65rem; }
+
+  .team-card-header { flex-direction: column; align-items: flex-start; }
+
+  .team-card-actions { flex-direction: column; }
+  .btn-approve,
+  .btn-reminder,
+  .btn-secondary { width: 100%; justify-content: center; text-align: center; }
+}
