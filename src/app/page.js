@@ -70,7 +70,7 @@ export default function Home() {
         <div className="nav-user">
           <div className="user-info-box">
              <span className="user-greeting">Olá, {user?.name || user?.username}</span>
-             <span className="user-role-badge">{user?.role}</span>
+             {/* <span className="user-role-badge">{user?.role}</span> */}
           </div>
           <button className="btn-logout" onClick={logout}>
             Sair
