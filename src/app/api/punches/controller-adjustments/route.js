@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getAuthUser } from "@/lib/apiAuth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req) {
   try {
     const user = getAuthUser(req);

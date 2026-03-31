@@ -3,6 +3,8 @@ import { getDb } from "@/lib/db";
 import { getAuthUser } from "@/lib/apiAuth";
 import * as XLSX from "xlsx";
 
+export const dynamic = "force-dynamic";
+
 const STATUS_LABEL = {
   PENDENTE_FUNCIONARIO: "Aguardando Funcionário",
   PENDENTE_CHEFIA: "Aguardando Gestor",
