@@ -8,12 +8,8 @@ function toCamelCase(str) {
   if (!str) return "";
   return str
     .toLowerCase()
-    .replace(/(?:^|\s)\S/g, function (a) {
-      return a.toUpperCase();
-    })
-    .replace(/\b(De|Da|Do|Das|Dos)\b/g, function (match) {
-      return match.toLowerCase();
-    });
+    .replace(/(?:^|\s)\S/g, (a) => a.toUpperCase())
+    .replace(/\b(De|Da|Do|Das|Dos)\b/g, (match) => match.toLowerCase());
 }
 
 function generateUsername(input) {
@@ -42,29 +38,26 @@ function parseExcelDate(excelDate) {
   return String(excelDate);
 }
 
+// 1. APENAS LÊ O EXCEL E DEVOLVE PARA PRÉ-VISUALIZAÇÃO
 export async function POST(req) {
   try {
     const user = getAuthUser(req);
-    if (!user || user.role?.toUpperCase() !== "RH") {
+    if (!user || user.role?.toUpperCase() !== "RH")
       return NextResponse.json({ error: "Acesso negado." }, { status: 403 });
-    }
 
     const formData = await req.formData();
     const file = formData.get("file");
 
-    if (!file) {
+    if (!file)
       return NextResponse.json(
         { error: "Nenhum arquivo enviado." },
         { status: 400 },
       );
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 5 * 1024 * 1024)
       return NextResponse.json(
         { error: "O arquivo excede o limite de memória (5MB)." },
         { status: 413 },
       );
-    }
 
     const buffer = await file.arrayBuffer();
     const workbook = xlsx.read(buffer, { type: "buffer" });
@@ -73,60 +66,84 @@ export async function POST(req) {
       defval: "",
     });
 
-    const db = await getDb();
-
-    let insertedCount = 0;
-    let duplicatedCount = 0;
-
-    const funcionariosNotificados = new Map();
-    const controladoresNotificados = new Set();
+    const parsedRecords = [];
 
     for (const row of data) {
       const nomeCompleto = toCamelCase(row["Nome"] || row["Funcionário"] || "");
       if (!nomeCompleto) continue;
-
-      const nomeCr = row["Nome CR"] || row["Departamento"] || "";
-      const nomeChefiaStr = toCamelCase(
-        row["Nome Chefia"] || row["Nome Gestor"] || "",
-      );
-      let nomeControladorStr = toCamelCase(
-        row["NOME CONTROLADOR"] || row["Nome Controlador"] || "",
-      );
-      let matricula = String(row["Matrícula"] || row["Matricula"] || "")
-        .trim()
-        .replace(".0", "");
-      const descricaoHorario =
-        row["Descrição Horário"] || row["Descricao Horario"] || "";
-      const dataRegistro = parseExcelDate(row["Data"] || row["DATA"]);
-      const dia = row["Dia"] || row["DIA"] || "";
-
-      const usernameFuncionario = generateUsername(nomeCompleto);
-      const usernameChefia = generateUsername(nomeChefiaStr);
-      let usernameControlador = generateUsername(nomeControladorStr);
-
-      // REGRA: Se gestor e controlador forem a mesma pessoa, ignora como controlador
-      if (
-        usernameChefia &&
-        usernameControlador &&
-        usernameChefia === usernameControlador
-      ) {
-        usernameControlador = "";
-        nomeControladorStr = "";
-      }
 
       let batidas = [];
       Object.keys(row)
         .filter((key) => key.toLowerCase().startsWith("batida"))
         .forEach((key) => {
           const val = String(row[key] || "").trim();
-          if (val) {
-            batidas.push(...val.split(/\s+/));
-          }
+          if (val) batidas.push(...val.split(/\s+/));
         });
+
+      parsedRecords.push({
+        nome_cr: row["Nome CR"] || row["Departamento"] || "",
+        nome_chefia: toCamelCase(
+          row["Nome Chefia"] || row["Nome Gestor"] || "",
+        ),
+        nome_controlador: toCamelCase(
+          row["NOME CONTROLADOR"] || row["Nome Controlador"] || "",
+        ),
+        matricula: String(row["Matrícula"] || row["Matricula"] || "")
+          .trim()
+          .replace(".0", ""),
+        nome_completo: nomeCompleto,
+        descricao_horario:
+          row["Descrição Horário"] || row["Descricao Horario"] || "",
+        data_registro: parseExcelDate(row["Data"] || row["DATA"]),
+        dia: row["Dia"] || row["DIA"] || "",
+        batidas_originais: JSON.stringify(batidas),
+      });
+    }
+
+    return NextResponse.json({ success: true, data: parsedRecords });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Erro ao processar o arquivo. Verifique o formato." },
+      { status: 500 },
+    );
+  }
+}
+
+// 2. SALVA NO BANCO OS DADOS CONFIRMADOS E EDIDADOS PELO RH
+export async function PUT(req) {
+  try {
+    const user = getAuthUser(req);
+    if (!user || user.role?.toUpperCase() !== "RH")
+      return NextResponse.json({ error: "Acesso negado." }, { status: 403 });
+
+    const { records } = await req.json();
+    if (!records || !Array.isArray(records))
+      return NextResponse.json({ error: "Dados inválidos." }, { status: 400 });
+
+    const db = await getDb();
+    let insertedCount = 0;
+    let duplicatedCount = 0;
+    const funcionariosNotificados = new Map();
+    const controladoresNotificados = new Set();
+
+    for (const row of records) {
+      // Recalcula os logins baseados no que o RH possa ter editado na tela
+      const usernameFuncionario = generateUsername(row.nome_completo);
+      const usernameChefia = generateUsername(row.nome_chefia);
+      let usernameControlador = generateUsername(row.nome_controlador);
+
+      if (
+        usernameChefia &&
+        usernameControlador &&
+        usernameChefia === usernameControlador
+      ) {
+        usernameControlador = "";
+        row.nome_controlador = "";
+      }
 
       const jaExiste = await db.get(
         `SELECT id FROM punch_adjustments WHERE matricula = ? AND data_registro = ?`,
-        [matricula, dataRegistro],
+        [row.matricula, row.data_registro],
       );
 
       if (jaExiste) {
@@ -135,70 +152,55 @@ export async function POST(req) {
       }
 
       await db.run(
-        `
-        INSERT INTO punch_adjustments (
+        `INSERT INTO punch_adjustments (
           nome_cr, nome_chefia, nome_controlador, username_chefia, username_controlador, 
           matricula, nome_completo, username, descricao_horario, data_registro, dia, batidas_originais, status
-        ) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDENTE_FUNCIONARIO')`,
         [
-          nomeCr,
-          nomeChefiaStr,
-          nomeControladorStr,
+          row.nome_cr,
+          row.nome_chefia,
+          row.nome_controlador,
           usernameChefia,
           usernameControlador,
-          matricula,
-          nomeCompleto,
+          row.matricula,
+          row.nome_completo,
           usernameFuncionario,
-          descricaoHorario,
-          dataRegistro,
-          dia,
-          JSON.stringify(batidas),
-          "PENDENTE_FUNCIONARIO",
+          row.descricao_horario,
+          row.data_registro,
+          row.dia,
+          row.batidas_originais,
         ],
       );
 
       insertedCount++;
-
-      if (usernameFuncionario) {
-        if (!funcionariosNotificados.has(usernameFuncionario)) {
-          funcionariosNotificados.set(usernameFuncionario, nomeCompleto);
-        }
-      }
-
-      if (usernameControlador) {
+      if (usernameFuncionario)
+        funcionariosNotificados.set(usernameFuncionario, row.nome_completo);
+      if (usernameControlador)
         controladoresNotificados.add(usernameControlador);
-      }
     }
 
     const emailPromises = [];
-
-    funcionariosNotificados.forEach((nomeReal, username) => {
+    funcionariosNotificados.forEach((nomeReal, username) =>
       emailPromises.push(
         notifyEmployee(username, nomeReal).catch(console.error),
-      );
-    });
-
-    controladoresNotificados.forEach((usernameControlador) => {
+      ),
+    );
+    controladoresNotificados.forEach((usernameControlador) =>
       emailPromises.push(
         notifyController(usernameControlador).catch(console.error),
-      );
-    });
-
-    // Dispara os e-mails em segundo plano sem travar a resposta HTTP
+      ),
+    );
     Promise.all(emailPromises).catch((err) =>
-      console.error("Erro no envio de emails em background:", err),
+      console.error("Erro emails em background:", err),
     );
 
     return NextResponse.json({
       success: true,
-      message: `Processamento concluído. ${insertedCount} novos registros importados. ${duplicatedCount > 0 ? `(${duplicatedCount} ignorados por já existirem)` : ""}`,
+      message: `${insertedCount} registros importados. ${duplicatedCount > 0 ? `(${duplicatedCount} ignorados por duplicidade)` : ""}`,
     });
   } catch (error) {
-    console.error("Erro no upload:", error);
     return NextResponse.json(
-      { error: "Erro ao processar o arquivo. Verifique o formato." },
+      { error: "Erro ao salvar registros." },
       { status: 500 },
     );
   }

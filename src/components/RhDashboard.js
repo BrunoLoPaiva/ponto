@@ -1,5 +1,11 @@
 "use client";
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import { useAuth } from "@/context/AuthContext";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
@@ -162,7 +168,7 @@ export const RhDashboard = () => {
   const { token } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
 
-  // ── Data ──────────────────────────────────────────────────
+  // ── Data Principais ───────────────────────────────────────
   const [allData, setAllData] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -174,7 +180,7 @@ export const RhDashboard = () => {
   const [page, setPage] = useState(1);
 
   // ── Filtros Visão Geral ───────────────────────────────────
-  const [ovMes, setOvMes] = useState(""); // "YYYY-MM"
+  const [ovMes, setOvMes] = useState("");
   const [ovCr, setOvCr] = useState("");
 
   // ── Seleção em lote ───────────────────────────────────────
@@ -194,37 +200,42 @@ export const RhDashboard = () => {
   const [editTemplate, setEditTemplate] = useState(null);
   const [savingTpl, setSavingTpl] = useState(false);
 
-  // ── Upload ────────────────────────────────────────────────
+  // ── Novos Estados: Upload, RH Members & Edição ────────────
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadMsg, setUploadMsg] = useState(null);
   const [dragActive, setDragActive] = useState(false);
+  const [uploadPreview, setUploadPreview] = useState(null);
 
-  // ─────────────────────────────────────────────────────────
-  useEffect(() => {
-    let isMounted = true;
-    const fetchAll = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/punches/all-adjustments", {
-          headers: { Authorization: `Bearer ${token}` },
+  const [rhEditingAdj, setRhEditingAdj] = useState(null);
+  const [rhMembers, setRhMembers] = useState([]);
+  const [newRhUser, setNewRhUser] = useState({
+    username: "",
+    nome_completo: "",
+  });
+
+  // ── FUNÇÕES DE FETCH ─────────────────────────────────────────
+  const fetchAll = useCallback(async () => {
+    try {
+      const res = await fetch("/api/punches/all-adjustments", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAllData((prev) => {
+          if (JSON.stringify(prev) !== JSON.stringify(data.data)) {
+            return data.data;
+          }
+          return prev;
         });
-        const data = await res.json();
-        if (isMounted && data.success) setAllData(data.data);
-      } finally {
-        if (isMounted) setLoading(false);
       }
-    };
-
-    fetchAll();
-    const iv = setInterval(fetchAll, 1000);
-    return () => {
-      isMounted = false;
-      clearInterval(iv);
-    };
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }, [token]);
 
-  const fetchTemplates = React.useCallback(async () => {
+  const fetchTemplates = useCallback(async () => {
     const res = await fetch("/api/rh/templates", {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -235,11 +246,32 @@ export const RhDashboard = () => {
     }
   }, [token]);
 
+  const fetchMembers = useCallback(async () => {
+    try {
+      const res = await fetch("/api/rh/members", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) setRhMembers(data.data);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [token]);
+
+  // UseEffects
+  useEffect(() => {
+    setLoading(true);
+    fetchAll();
+    const iv = setInterval(fetchAll, 15000);
+    return () => clearInterval(iv);
+  }, [fetchAll]);
+
   useEffect(() => {
     if (activeTab === "settings") fetchTemplates();
-  }, [activeTab, fetchTemplates]);
+    if (activeTab === "rh-members") fetchMembers();
+  }, [activeTab, fetchTemplates, fetchMembers]);
 
-  // ── Overview: filtered data ────────────────────────────────
+  // ── Processamento de Dados (Visão Geral e Registros) ───────
   const overviewData = useMemo(() => {
     return allData.filter((d) => {
       if (ovCr && d.nome_cr !== ovCr) return false;
@@ -253,7 +285,6 @@ export const RhDashboard = () => {
     });
   }, [allData, ovMes, ovCr]);
 
-  // ── Stats (use overviewData) ────────────────────────────────
   const stats = useMemo(
     () => ({
       total: overviewData.length,
@@ -266,7 +297,6 @@ export const RhDashboard = () => {
     [overviewData],
   );
 
-  // Top 5 CRs (use overviewData)
   const topCrs = useMemo(() => {
     const map = {};
     overviewData
@@ -280,7 +310,6 @@ export const RhDashboard = () => {
       .slice(0, 5);
   }, [overviewData]);
 
-  // ── Registros: filtered data ───────────────────────────────
   const filtered = useMemo(() => {
     return allData.filter((d) => {
       if (filterStatus && d.status !== filterStatus) return false;
@@ -320,7 +349,25 @@ export const RhDashboard = () => {
     return [...s].sort().reverse();
   }, [allData]);
 
-  // ── Selection helpers ─────────────────────────────────────
+  const repoData = useMemo(() => {
+    const concluidos = allData.filter((d) => d.status === "CONCLUIDO");
+    const tree = {};
+    concluidos.forEach((d) => {
+      const parts = (d.data_registro || "//").split("/");
+      const mm = Number(parts[1]) - 1,
+        yy = parts[2];
+      if (!yy) return;
+      if (!tree[yy]) tree[yy] = {};
+      const mKey = `${mm}`;
+      if (!tree[yy][mKey]) tree[yy][mKey] = {};
+      const crName = d.nome_cr || "Sem CR";
+      if (!tree[yy][mKey][crName]) tree[yy][mKey][crName] = [];
+      tree[yy][mKey][crName].push(d);
+    });
+    return tree;
+  }, [allData]);
+
+  // ── AÇÕES DIVERSAS ──────────────────────────────────────────
   const toggleSelect = (id) => {
     setSelected((prev) => {
       const n = new Set(prev);
@@ -328,6 +375,7 @@ export const RhDashboard = () => {
       return n;
     });
   };
+
   const toggleAll = () => {
     const pending = pageData.filter((d) => d.status !== "CONCLUIDO");
     if (pending.every((d) => selected.has(d.id))) {
@@ -378,23 +426,6 @@ export const RhDashboard = () => {
     }
   };
 
-  // ── PDF helpers ───────────────────────────────────────────
-  const parseBatidas = (s) => {
-    try {
-      return JSON.parse(s) || [];
-    } catch {
-      return [];
-    }
-  };
-  const parseMarcacoes = (s) => {
-    if (!s) return [false, false, false, false];
-    try {
-      return JSON.parse(s);
-    } catch {
-      return [false, false, false, false];
-    }
-  };
-
   const triggerPdf = (adj) => {
     setPrintAdj(adj);
     setTimeout(async () => {
@@ -422,7 +453,6 @@ export const RhDashboard = () => {
     window.open(`/api/rh/export?${params.toString()}`, "_blank");
   };
 
-  // ── Template save ─────────────────────────────────────────
   const handleSaveTemplate = async (tpl) => {
     setSavingTpl(true);
     try {
@@ -444,41 +474,6 @@ export const RhDashboard = () => {
     }
   };
 
-  // ── Repositório helpers ───────────────────────────────────
-  const repoData = useMemo(() => {
-    const concluidos = allData.filter((d) => d.status === "CONCLUIDO");
-    const tree = {};
-    concluidos.forEach((d) => {
-      const parts = (d.data_registro || "//").split("/");
-      const mm = Number(parts[1]) - 1,
-        yy = parts[2];
-      if (!yy) return;
-      if (!tree[yy]) tree[yy] = {};
-      const mKey = `${mm}`;
-      if (!tree[yy][mKey]) tree[yy][mKey] = {};
-      const crName = d.nome_cr || "Sem CR";
-      if (!tree[yy][mKey][crName]) tree[yy][mKey][crName] = [];
-      tree[yy][mKey][crName].push(d);
-    });
-    return tree;
-  }, [allData]);
-
-  const [year, monthIdx, cr] = repoPath;
-  const crumbs = [
-    "Repositório",
-    year,
-    monthIdx !== undefined ? MONTHS_PT[Number(monthIdx)] : undefined,
-    cr,
-  ].filter(Boolean);
-
-  const TAB_LIST = [
-    { id: "overview", icon: "📊", label: "Visão Geral" },
-    { id: "records", icon: "📋", label: "Registros" },
-    { id: "repository", icon: "🗂️", label: "Repositório" },
-    { id: "settings", icon: "⚙️", label: "Configurações" },
-    { id: "upload", icon: "📤", label: "Upload" },
-  ];
-
   const handleViewAttachment = async (id) => {
     try {
       const res = await fetch(`/api/punches/attachment?id=${id}`, {
@@ -492,6 +487,39 @@ export const RhDashboard = () => {
       toast(err.message, "error");
     }
   };
+
+  // Helpers
+  const [year, monthIdx, cr] = repoPath;
+  const crumbs = [
+    "Repositório",
+    year,
+    monthIdx !== undefined ? MONTHS_PT[Number(monthIdx)] : undefined,
+    cr,
+  ].filter(Boolean);
+  const parseBatidas = (s) => {
+    try {
+      return JSON.parse(s) || [];
+    } catch {
+      return [];
+    }
+  };
+  const parseMarcacoes = (s) => {
+    if (!s) return [false, false, false, false];
+    try {
+      return JSON.parse(s);
+    } catch {
+      return [false, false, false, false];
+    }
+  };
+
+  const TAB_LIST = [
+    { id: "overview", icon: "📊", label: "Visão Geral" },
+    { id: "records", icon: "📋", label: "Registros" },
+    { id: "repository", icon: "🗂️", label: "Repositório" },
+    { id: "settings", icon: "⚙️", label: "Configurações" },
+    { id: "upload", icon: "📤", label: "Upload" },
+    { id: "rh-members", icon: "👥", label: "Equipe RH" },
+  ];
 
   // ─────────────────────────────────────────────────────────────
   return (
@@ -522,7 +550,6 @@ export const RhDashboard = () => {
       {/* ════════ TAB: VISÃO GERAL ════════ */}
       {activeTab === "overview" && (
         <div className="overview-container">
-          {/* Filter bar */}
           <div className="overview-filters">
             <span className="filter-label">📅 Período:</span>
             <select
@@ -570,7 +597,6 @@ export const RhDashboard = () => {
             </span>
           </div>
 
-          {/* KPI cards */}
           <div className="stats-row">
             {[
               {
@@ -611,7 +637,6 @@ export const RhDashboard = () => {
             ))}
           </div>
 
-          {/* Charts */}
           <div className="charts-row">
             <div className="chart-card">
               <h4 className="chart-title">📈 Status Geral</h4>
@@ -634,7 +659,6 @@ export const RhDashboard = () => {
       {/* ════════ TAB: REGISTROS ════════ */}
       {activeTab === "records" && (
         <div className="records-container">
-          {/* Toolbar */}
           <div className="records-toolbar">
             <input
               className="rh-search"
@@ -698,7 +722,6 @@ export const RhDashboard = () => {
             </button>
           </div>
 
-          {/* Batch bar */}
           {selectedPending.length > 0 && (
             <div className="batch-bar">
               <span>
@@ -722,7 +745,6 @@ export const RhDashboard = () => {
             </div>
           )}
 
-          {/* Table */}
           <div className="table-responsive-wrapper">
             <table className="rh-table">
               <thead>
@@ -759,8 +781,26 @@ export const RhDashboard = () => {
                   </tr>
                 ) : pageData.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="rh-table-msg">
-                      Nenhum registro encontrado.
+                    <td colSpan={8} className="rh-table-empty">
+                      <div className="empty-state-card">
+                        <span className="empty-icon">📭</span>
+                        <h4>Nenhum registro encontrado</h4>
+                        <p>Não há pendências com os filtros atuais.</p>
+                        {(filterStatus || filterCr || filterMes || busca) && (
+                          <button
+                            className="btn-secondary"
+                            style={{ marginTop: "10px" }}
+                            onClick={() => {
+                              setFilterStatus("");
+                              setFilterCr("");
+                              setFilterMes("");
+                              setBusca("");
+                            }}
+                          >
+                            Limpar Todos os Filtros
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -769,7 +809,7 @@ export const RhDashboard = () => {
                       key={adj.id}
                       className={selected.has(adj.id) ? "row-selected" : ""}
                     >
-                      <td>
+                      <td data-label="Selecionar">
                         {adj.status !== "CONCLUIDO" && (
                           <input
                             type="checkbox"
@@ -778,11 +818,14 @@ export const RhDashboard = () => {
                           />
                         )}
                       </td>
-                      <td className="rh-td-date">{adj.data_registro}</td>
-                      <td>
+                      <td data-label="Data" className="rh-td-date">
+                        {adj.data_registro}
+                      </td>
+                      <td data-label="Funcionário">
                         <strong>{adj.nome_completo}</strong>
                       </td>
                       <td
+                        data-label="Matrícula"
                         style={{
                           color: "var(--color-text-muted)",
                           fontSize: "0.8rem",
@@ -790,8 +833,14 @@ export const RhDashboard = () => {
                       >
                         {adj.matricula}
                       </td>
-                      <td style={{ fontSize: "0.85rem" }}>{adj.nome_cr}</td>
                       <td
+                        data-label="CR / Depto"
+                        style={{ fontSize: "0.85rem" }}
+                      >
+                        {adj.nome_cr}
+                      </td>
+                      <td
+                        data-label="Gestor"
                         style={{
                           fontSize: "0.85rem",
                           color: "var(--color-text-muted)",
@@ -799,12 +848,12 @@ export const RhDashboard = () => {
                       >
                         {adj.nome_chefia}
                       </td>
-                      <td>
+                      <td data-label="Status">
                         <span className={STATUS_CLASS[adj.status]}>
                           {STATUS_LABEL[adj.status]}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Ações">
                         <div className="rh-row-actions">
                           <button
                             className="btn-preview"
@@ -813,6 +862,15 @@ export const RhDashboard = () => {
                           >
                             👁
                           </button>
+                          {adj.status !== "CONCLUIDO" && (
+                            <button
+                              className="btn-preview outline-btn"
+                              onClick={() => setRhEditingAdj({ ...adj })}
+                              title="Corrigir Informações do Ponto"
+                            >
+                              ✏️
+                            </button>
+                          )}
                           {adj.status === "CONCLUIDO" && (
                             <button
                               className="btn-preview outline-btn"
@@ -831,7 +889,6 @@ export const RhDashboard = () => {
             </table>
           </div>
 
-          {/* Pagination */}
           <div className="rh-pagination">
             <button
               className="page-btn"
@@ -880,7 +937,6 @@ export const RhDashboard = () => {
             }}
           />
 
-          {/* Level 0: Years */}
           {repoPath.length === 0 && (
             <div className="repo-grid">
               {Object.keys(repoData)
@@ -917,7 +973,6 @@ export const RhDashboard = () => {
             </div>
           )}
 
-          {/* Level 1: Months */}
           {repoPath.length === 1 && (
             <div className="repo-grid">
               {Object.keys(repoData[year] || {})
@@ -944,7 +999,6 @@ export const RhDashboard = () => {
             </div>
           )}
 
-          {/* Level 2: CRs */}
           {repoPath.length === 2 && (
             <div className="repo-grid">
               {Object.keys(repoData[year]?.[monthIdx] || {})
@@ -968,7 +1022,6 @@ export const RhDashboard = () => {
             </div>
           )}
 
-          {/* Level 3: Documents */}
           {repoPath.length === 3 && (
             <div className="repo-docs-grid">
               {(repoData[year]?.[monthIdx]?.[cr] || []).map((adj) => (
@@ -1057,7 +1110,7 @@ export const RhDashboard = () => {
                       onChange={(html) =>
                         setEditTemplate((t) => ({ ...t, corpo: html }))
                       }
-                      placeholder="Digite o conteúdo do e-mail... Use o botão + {{nome}} para inserir o nome do destinatário."
+                      placeholder="Digite o conteúdo do e-mail..."
                     />
                   ) : (
                     <div
@@ -1067,21 +1120,14 @@ export const RhDashboard = () => {
                   )}
                   {isEditing && (
                     <>
-                      <div className="tpl-preview-label">
-                        Pré-visualização (com nome &quot;João Silva&quot;):
-                      </div>
+                      <div className="tpl-preview-label">Pré-visualização:</div>
                       <div
                         className="tpl-preview"
                         dangerouslySetInnerHTML={{
-                          __html: current.corpo
-                            .replace(
-                              /\{\{nome\}\}/g,
-                              "<strong>João Silva</strong>",
-                            )
-                            .replace(
-                              /class="rte-chip"/g,
-                              'style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:999px;padding:0 8px;font-size:0.78rem;font-weight:700;display:inline-flex;align-items:center"',
-                            ),
+                          __html: current.corpo.replace(
+                            /\{\{nome\}\}/g,
+                            "<strong>João Silva</strong>",
+                          ),
                         }}
                       />
                       <div className="template-actions">
@@ -1098,129 +1144,352 @@ export const RhDashboard = () => {
                 </div>
               );
             })}
-            {templates.length === 0 && (
-              <p style={{ color: "var(--color-text-muted)" }}>
-                Carregando templates...
-              </p>
-            )}
           </div>
         </div>
       )}
 
       {/* ════════ TAB: UPLOAD ════════ */}
       {activeTab === "upload" && (
-        <div className="upload-card">
-          <div
-            className={`upload-dropzone ${dragActive ? "drag-active" : ""}`}
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setDragActive(true);
-            }}
-            onDragLeave={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setDragActive(false);
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setDragActive(false);
-              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                setFile(e.dataTransfer.files[0]);
-              }
-            }}
-          >
-            <div className="upload-icon">📊</div>
-            <h3>Selecione o arquivo Excel ou arraste para cá</h3>
-            <p>Formatos aceitos: .xlsx, .xls, .xltx, .csv</p>
-            <input
-              type="file"
-              accept=".xlsx,.xls,.xlsm,.xlsb,.xltx,.xltm,.csv"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              id="file-upload"
-              className="file-input-hidden"
-            />
-            <label htmlFor="file-upload" className="btn-secondary upload-btn">
-              {file ? file.name : "Procurar Arquivo"}
-            </label>
-          </div>
-          {uploadMsg && (
-            <div className={`alert alert-${uploadMsg.type}`}>
-              {uploadMsg.type === "success" ? "✅ " : "❌ "}
-              {uploadMsg.text}
+        <div
+          className="upload-card"
+          style={{
+            maxWidth: uploadPreview ? "900px" : "560px",
+            transition: "max-width 0.3s ease",
+          }}
+        >
+          {!uploadPreview ? (
+            <>
+              <div
+                className={`upload-dropzone ${dragActive ? "drag-active" : ""}`}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragActive(true);
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  setDragActive(false);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragActive(false);
+                  if (e.dataTransfer.files && e.dataTransfer.files[0])
+                    setFile(e.dataTransfer.files[0]);
+                }}
+              >
+                <div className="upload-icon">📊</div>
+                <h3>Selecione o arquivo Excel ou arraste para cá</h3>
+                <p>
+                  Formatos aceitos: .xlsx, .xls, .xlsm, .xlsb, .xltx, .xltm,
+                  .csv
+                </p>
+                <input
+                  type="file"
+                  accept=".xlsx, .xls, .xlsm, .xlsb, .xltx, .xltm, .csv"
+                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                  id="file-upload"
+                  className="file-input-hidden"
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="btn-secondary upload-btn"
+                >
+                  {file ? file.name : "Procurar Arquivo"}
+                </label>
+              </div>
+
+              <div className="upload-actions">
+                <button
+                  className="btn-primary rh-primary"
+                  disabled={!file || uploading}
+                  onClick={async () => {
+                    setUploading(true);
+                    const fd = new FormData();
+                    fd.append("file", file);
+                    try {
+                      const res = await fetch("/api/rh/upload", {
+                        method: "POST",
+                        headers: { Authorization: `Bearer ${token}` },
+                        body: fd,
+                      });
+                      const data = await res.json();
+                      if (data.success) {
+                        setUploadPreview(data.data);
+                      } else {
+                        toast(data.error, "error");
+                      }
+                    } catch {
+                      toast("Erro ao ler planilha.", "error");
+                    } finally {
+                      setUploading(false);
+                    }
+                  }}
+                >
+                  {uploading
+                    ? "⏳ Lendo Planilha..."
+                    : "👁 Pré-visualizar e Validar Dados"}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="preview-mode">
+              <h3
+                style={{
+                  marginBottom: "8px",
+                  color: "var(--color-text-primary)",
+                }}
+              >
+                Confirmação de Importação
+              </h3>
+              <p
+                style={{
+                  color: "var(--color-text-muted)",
+                  marginBottom: "20px",
+                  fontSize: "14px",
+                }}
+              >
+                Revise os dados antes de inseri-los no banco. Você pode corrigir
+                erros de digitação diretamente nos campos abaixo.
+              </p>
+
+              <div
+                className="table-responsive-wrapper"
+                style={{
+                  maxHeight: "400px",
+                  overflowY: "auto",
+                  border: "1px solid var(--color-border)",
+                }}
+              >
+                <table className="rh-table">
+                  <thead>
+                    <tr>
+                      <th>Matrícula</th>
+                      <th>Funcionário</th>
+                      <th>Data</th>
+                      <th>Gestor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {uploadPreview.map((row, idx) => (
+                      <tr key={idx}>
+                        <td data-label="Matrícula">
+                          <input
+                            className="input-field"
+                            style={{ padding: "6px" }}
+                            value={row.matricula}
+                            onChange={(e) => {
+                              const newPreview = [...uploadPreview];
+                              newPreview[idx].matricula = e.target.value;
+                              setUploadPreview(newPreview);
+                            }}
+                          />
+                        </td>
+                        <td data-label="Funcionário">
+                          <input
+                            className="input-field"
+                            style={{ padding: "6px" }}
+                            value={row.nome_completo}
+                            onChange={(e) => {
+                              const newPreview = [...uploadPreview];
+                              newPreview[idx].nome_completo = e.target.value;
+                              setUploadPreview(newPreview);
+                            }}
+                          />
+                        </td>
+                        <td data-label="Data" className="rh-td-date">
+                          {row.data_registro}
+                        </td>
+                        <td data-label="Gestor">
+                          <input
+                            className="input-field"
+                            style={{ padding: "6px" }}
+                            value={row.nome_chefia}
+                            onChange={(e) => {
+                              const newPreview = [...uploadPreview];
+                              newPreview[idx].nome_chefia = e.target.value;
+                              setUploadPreview(newPreview);
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div
+                className="upload-actions"
+                style={{ gap: "12px", marginTop: "24px", flexDirection: "row" }}
+              >
+                <button
+                  className="btn-secondary"
+                  onClick={() => setUploadPreview(null)}
+                >
+                  ✕ Cancelar
+                </button>
+                <button
+                  className="btn-primary rh-primary"
+                  disabled={uploading}
+                  onClick={async () => {
+                    setUploading(true);
+                    try {
+                      const res = await fetch("/api/rh/upload", {
+                        method: "PUT",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({ records: uploadPreview }),
+                      });
+                      const data = await res.json();
+                      if (data.success) {
+                        toast(data.message, "success");
+                        setUploadPreview(null);
+                        setFile(null);
+                        fetchAll();
+                      } else {
+                        toast(data.error, "error");
+                      }
+                    } catch {
+                      toast("Erro ao salvar.", "error");
+                    } finally {
+                      setUploading(false);
+                    }
+                  }}
+                >
+                  {uploading
+                    ? "⏳ Salvando..."
+                    : `✅ Confirmar e Importar (${uploadPreview.length} registros)`}
+                </button>
+              </div>
             </div>
           )}
-          <div className="upload-actions">
-            <button
-              className="btn-primary rh-primary"
-              disabled={!file || uploading}
-              onClick={async () => {
-                setUploading(true);
-                setUploadMsg(null);
-                const fd = new FormData();
-                fd.append("file", file);
-                try {
-                  const res = await fetch("/api/rh/upload", {
-                    method: "POST",
-                    headers: { Authorization: `Bearer ${token}` },
-                    body: fd,
-                  });
-                  const data = await res.json();
-                  if (data.success) {
-                    setUploadMsg({ type: "success", text: data.message });
-                    setFile(null);
-                    fetchAll();
-                  } else
-                    setUploadMsg({
-                      type: "error",
-                      text: data.error || "Erro no upload.",
-                    });
-                } catch {
-                  setUploadMsg({ type: "error", text: "Erro de rede." });
-                } finally {
-                  setUploading(false);
-                }
+        </div>
+      )}
+
+      {/* ════════ TAB: EQUIPE RH ════════ */}
+      {activeTab === "rh-members" && (
+        <div className="settings-container">
+          <div className="settings-header">
+            <h3>👥 Gestão de Acessos do RH</h3>
+            <p>
+              Adicione ou remova as permissões dos administradores que podem
+              acessar este painel.
+            </p>
+          </div>
+
+          <div
+            className="upload-card"
+            style={{ maxWidth: "100%", margin: "0", padding: "1.5rem" }}
+          >
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                marginBottom: "24px",
+                flexWrap: "wrap",
               }}
             >
-              {uploading ? "⏳ Processando..." : "📤 Enviar Planilha"}
-            </button>
+              <input
+                className="input-field"
+                placeholder="Usuário"
+                value={newRhUser.username}
+                onChange={(e) =>
+                  setNewRhUser({ ...newRhUser, username: e.target.value })
+                }
+                style={{ flex: "1", minWidth: "200px" }}
+              />
+              <input
+                className="input-field"
+                placeholder="Nome Completo (Opcional)"
+                value={newRhUser.nome_completo}
+                onChange={(e) =>
+                  setNewRhUser({ ...newRhUser, nome_completo: e.target.value })
+                }
+                style={{ flex: "2", minWidth: "200px" }}
+              />
+              <button
+                className="btn-primary rh-primary"
+                style={{ width: "auto" }}
+                onClick={async () => {
+                  const res = await fetch("/api/rh/members", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ username: newRhUser.username }),
+                  });
+                  if (res.ok) {
+                    toast("Acesso concedido!", "success");
+                    setNewRhUser({ username: "", nome_completo: "" });
+                    fetchMembers();
+                  }
+                }}
+              >
+                ➕ Conceder Acesso
+              </button>
+            </div>
+
+            <div className="table-responsive-wrapper">
+              <table className="rh-table">
+                <thead>
+                  <tr>
+                    <th>Login</th>
+                    <th>Nome</th>
+                    <th style={{ textAlign: "right" }}>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rhMembers.length === 0 ? (
+                    <tr>
+                      <td colSpan="3" className="rh-table-msg">
+                        Carregando lista de administradores...
+                      </td>
+                    </tr>
+                  ) : (
+                    rhMembers.map((membro) => (
+                      <tr key={membro.username}>
+                        <td data-label="Login">
+                          <strong>{membro.username}</strong>
+                        </td>
+                        <td data-label="Nome">
+                          {membro.nome_completo || "Ainda não fez login"}
+                        </td>
+                        <td data-label="Ações" style={{ textAlign: "right" }}>
+                          <button
+                            className="btn-clear-filter"
+                            onClick={async () => {
+                              if (
+                                !window.confirm(
+                                  `Remover acesso de ${membro.username}?`,
+                                )
+                              )
+                                return;
+                              await fetch(
+                                `/api/rh/members?username=${membro.username}`,
+                                {
+                                  method: "DELETE",
+                                  headers: { Authorization: `Bearer ${token}` },
+                                },
+                              );
+                              toast("Acesso revogado.", "info");
+                              fetchMembers();
+                            }}
+                          >
+                            Revogar Acesso
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ── Hidden PDF render target ── */}
-      {printAdj && (
-        <PunchDocument
-          ref={pdfRef}
-          bancoHoras={printAdj.banco_horas === 1}
-          anexoPath={printAdj.anexo_path}
-          nome={printAdj.nome_completo || ""}
-          setor={printAdj.nome_cr || ""}
-          data={printAdj.data_registro || ""}
-          id={printAdj.matricula || ""}
-          batidasOriginais={parseBatidas(printAdj.batidas_originais)}
-          batidasCorrigidas={parseBatidas(printAdj.batidas_corrigidas)}
-          missedPunches={parseMarcacoes(printAdj.marcacoes_faltantes)}
-          justificativa={printAdj.justificativa || ""}
-          isAprovado={true}
-          abonado={
-            printAdj.abonado === 1
-              ? true
-              : printAdj.abonado === 0
-                ? false
-                : null
-          }
-          assinaturaColaboradorData={printAdj.employee_signature_date}
-          assinaturaGestorData={printAdj.supervisor_signature_date}
-          signatureFont={printAdj.signature_font}
-          signatoryName={printAdj.nome_completo}
-          supervisorFont={printAdj.supervisor_signature_font}
-          supervisorName={printAdj.nome_chefia_completo || printAdj.nome_chefia}
-        />
-      )}
-
-      {/* ── Preview modal ── */}
+      {/* ── MODAL: PREVIEW ── */}
       {previewAdj && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: "1060px" }}>
@@ -1293,12 +1562,178 @@ export const RhDashboard = () => {
                   signatureFont={previewAdj.signature_font}
                   signatoryName={previewAdj.nome_completo}
                   supervisorFont={previewAdj.supervisor_signature_font}
-                  supervisorName={previewAdj.nome_chefia_completo || previewAdj.nome_chefia}
+                  supervisorName={
+                    previewAdj.nome_chefia_completo || previewAdj.nome_chefia
+                  }
                 />
               </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── MODAL: EDIÇÃO DE REGISTRO PELO RH ── */}
+      {rhEditingAdj && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: "500px" }}>
+            <div className="modal-preview-header">
+              <h3>✏️ Corrigir Dados do Ponto</h3>
+              <button
+                className="btn-secondary"
+                onClick={() => setRhEditingAdj(null)}
+              >
+                ✕ Fechar
+              </button>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+                marginTop: "16px",
+              }}
+            >
+              <div className="form-group">
+                <label
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "bold",
+                    color: "var(--color-text-secondary)",
+                  }}
+                >
+                  Nome do Colaborador
+                </label>
+                <input
+                  className="input-field"
+                  value={rhEditingAdj.nome_completo || ""}
+                  onChange={(e) =>
+                    setRhEditingAdj({
+                      ...rhEditingAdj,
+                      nome_completo: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="form-group">
+                <label
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "bold",
+                    color: "var(--color-text-secondary)",
+                  }}
+                >
+                  Nome do Gestor (Aprovador)
+                </label>
+                <input
+                  className="input-field"
+                  value={rhEditingAdj.nome_chefia || ""}
+                  onChange={(e) =>
+                    setRhEditingAdj({
+                      ...rhEditingAdj,
+                      nome_chefia: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="form-group">
+                <label
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "bold",
+                    color: "var(--color-text-secondary)",
+                  }}
+                >
+                  Login do Gestor
+                </label>
+                <input
+                  className="input-field"
+                  value={rhEditingAdj.username_chefia || ""}
+                  onChange={(e) =>
+                    setRhEditingAdj({
+                      ...rhEditingAdj,
+                      username_chefia: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="form-group">
+                <label
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "bold",
+                    color: "var(--color-text-secondary)",
+                  }}
+                >
+                  Departamento / CR
+                </label>
+                <input
+                  className="input-field"
+                  value={rhEditingAdj.nome_cr || ""}
+                  onChange={(e) =>
+                    setRhEditingAdj({
+                      ...rhEditingAdj,
+                      nome_cr: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="upload-actions" style={{ marginTop: "10px" }}>
+                <button
+                  className="btn-primary rh-primary"
+                  onClick={async () => {
+                    const res = await fetch("/api/rh/adjustments", {
+                      method: "PUT",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify(rhEditingAdj),
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      toast("Correção salva!", "success");
+                      setRhEditingAdj(null);
+                      fetchAll();
+                    } else toast(data.error, "error");
+                  }}
+                >
+                  💾 Salvar Correções
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Hidden PDF render target ── */}
+      {printAdj && (
+        <PunchDocument
+          ref={pdfRef}
+          bancoHoras={printAdj.banco_horas === 1}
+          anexoPath={printAdj.anexo_path}
+          nome={printAdj.nome_completo || ""}
+          setor={printAdj.nome_cr || ""}
+          data={printAdj.data_registro || ""}
+          id={printAdj.matricula || ""}
+          batidasOriginais={parseBatidas(printAdj.batidas_originais)}
+          batidasCorrigidas={parseBatidas(printAdj.batidas_corrigidas)}
+          missedPunches={parseMarcacoes(printAdj.marcacoes_faltantes)}
+          justificativa={printAdj.justificativa || ""}
+          isAprovado={true}
+          abonado={
+            printAdj.abonado === 1
+              ? true
+              : printAdj.abonado === 0
+                ? false
+                : null
+          }
+          assinaturaColaboradorData={printAdj.employee_signature_date}
+          assinaturaGestorData={printAdj.supervisor_signature_date}
+          signatureFont={printAdj.signature_font}
+          signatoryName={printAdj.nome_completo}
+          supervisorFont={printAdj.supervisor_signature_font}
+          supervisorName={printAdj.nome_chefia_completo || printAdj.nome_chefia}
+        />
       )}
     </div>
   );

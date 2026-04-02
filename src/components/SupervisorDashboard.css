@@ -31,7 +31,9 @@
 }
 
 /* ── Status section ── */
-.status-section { margin-bottom: 2rem; }
+.status-section {
+  margin-bottom: 2rem;
+}
 
 .section-header {
   display: flex;
@@ -56,7 +58,11 @@
 }
 
 /* ── Team list ── */
-.team-layout { display: flex; flex-direction: column; gap: 1rem; }
+.team-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
 
 .team-list {
   display: grid;
@@ -78,7 +84,9 @@
 
 .action-card {
   border-color: #c7d2fe;
-  box-shadow: 0 0 0 1px rgba(99,102,241,0.08), var(--shadow-sm);
+  box-shadow:
+    0 0 0 1px rgba(99, 102, 241, 0.08),
+    var(--shadow-sm);
 }
 
 .departament-title {
@@ -126,10 +134,15 @@
   font-weight: 700;
   font-size: 0.855rem;
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
+  transition:
+    background 0.15s,
+    transform 0.1s;
   flex: 1;
 }
-.btn-approve:hover { background: #059669; transform: translateY(-1px); }
+.btn-approve:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
 
 .btn-reminder {
   background: #fff7ed;
@@ -143,8 +156,14 @@
   transition: all 0.15s;
   flex: 1;
 }
-.btn-reminder:hover:not(:disabled) { background: #ffedd5; border-color: #fb923c; }
-.btn-reminder:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-reminder:hover:not(:disabled) {
+  background: #ffedd5;
+  border-color: #fb923c;
+}
+.btn-reminder:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 /* ══════════════════════════════════════════════
    RESPONSIVE
@@ -159,16 +178,30 @@
 
 /* Mobile */
 @media (max-width: 767px) {
-  .dashboard-header h2 { font-size: 1.2rem; }
+  .dashboard-header h2 {
+    font-size: 1.2rem;
+  }
 
-  .team-list { grid-template-columns: 1fr; gap: 0.65rem; }
+  .team-list {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
 
-  .team-card-header { flex-direction: column; align-items: flex-start; }
+  .team-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 
-  .team-card-actions { flex-direction: column; }
+  .team-card-actions {
+    flex-direction: column;
+  }
   .btn-approve,
   .btn-reminder,
-  .btn-secondary { width: 100%; justify-content: center; text-align: center; }
+  .btn-secondary {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
 }
 
 /* ── Supervisor approval modal ── */

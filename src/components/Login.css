@@ -168,3 +168,128 @@
     transform: translateY(0);
   }
 }
+
+/* ── SESSÃO DE VALIDAÇÃO (LOGIN) ── */
+.validation-section {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.validation-divider {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.validation-divider::before,
+.validation-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.validation-divider span {
+  padding: 0 10px;
+}
+
+.btn-validate-toggle {
+  width: 100%;
+  padding: 12px;
+  background-color: #f8fafc;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-validate-toggle:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.validate-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.validate-form label {
+  font-size: 13px;
+  color: #475569;
+  font-weight: 600;
+}
+
+.validate-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.btn-validate-submit {
+  flex: 1;
+  background-color: #16a34a; /* Verde para indicar sucesso/validação */
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-validate-submit:hover {
+  background-color: #15803d;
+}
+
+.btn-validate-cancel {
+  flex: 1;
+  background-color: transparent;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+  padding: 10px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-validate-cancel:hover {
+  background-color: #e2e8f0;
+  color: #334155;
+}
+
+/* ── INPUT DE VALIDAÇÃO ── */
+.input-field {
+  padding: 12px 16px;
+  border: 2px solid #edf2f7;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.2s;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.input-field:focus {
+  border-color: var(--secondary-color); /* Usa o verde do tema para destacar */
+  box-shadow: 0 0 0 4px rgba(47, 197, 126, 0.1);
+}

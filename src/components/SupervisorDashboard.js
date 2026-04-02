@@ -70,7 +70,14 @@ export const SupervisorDashboard = () => {
           { headers: { Authorization: `Bearer ${token}` } },
         );
         const data = await response.json();
-        if (isMounted && data.success) setAdjustments(data.data);
+        if (isMounted && data.success) {
+          setAdjustments((prev) => {
+            if (JSON.stringify(prev) !== JSON.stringify(data.data)) {
+              return data.data;
+            }
+            return prev;
+          });
+        }
       } catch (error) {
         console.error("Error fetching team adjustments", error);
       } finally {
@@ -79,7 +86,7 @@ export const SupervisorDashboard = () => {
     };
 
     fetchTeamAdjustments();
-    const interval = setInterval(fetchTeamAdjustments, 1000);
+    const interval = setInterval(fetchTeamAdjustments, 10000);
     return () => {
       isMounted = false;
       clearInterval(interval);
@@ -577,7 +584,10 @@ export const SupervisorDashboard = () => {
           signatureFont={printingAdjustment.signature_font}
           signatoryName={printingAdjustment.nome_completo}
           supervisorFont={printingAdjustment.supervisor_signature_font}
-          supervisorName={printingAdjustment.nome_chefia_completo || printingAdjustment.nome_chefia}
+          supervisorName={
+            printingAdjustment.nome_chefia_completo ||
+            printingAdjustment.nome_chefia
+          }
         />
       )}
 
@@ -666,7 +676,9 @@ export const SupervisorDashboard = () => {
                   signatureFont={previewAdj.signature_font}
                   signatoryName={previewAdj.nome_completo}
                   supervisorFont={previewAdj.supervisor_signature_font}
-                  supervisorName={previewAdj.nome_chefia_completo || previewAdj.nome_chefia}
+                  supervisorName={
+                    previewAdj.nome_chefia_completo || previewAdj.nome_chefia
+                  }
                 />
               </div>
             </div>
@@ -729,7 +741,11 @@ export const SupervisorDashboard = () => {
                   signatureFont={selectedAdjustment.signature_font}
                   signatoryName={selectedAdjustment.nome_completo || ""}
                   supervisorFont={supervisorFont}
-                  supervisorName={user?.name && !user?.name?.includes('.') ? user.name : selectedAdjustment.nome_chefia}
+                  supervisorName={
+                    user?.name && !user?.name?.includes(".")
+                      ? user.name
+                      : selectedAdjustment.nome_chefia
+                  }
                 />
               </div>
             </div>
@@ -748,8 +764,11 @@ export const SupervisorDashboard = () => {
                     style={{ fontFamily: f.id }}
                   >
                     <span className="font-preview" style={{ fontFamily: f.id }}>
-  {(user?.name && !user?.name?.includes('.') ? user.name : selectedAdjustment.nome_chefia)?.split(" ")[0] || "Gestor"}
-</span>
+                      {(user?.name && !user?.name?.includes(".")
+                        ? user.name
+                        : selectedAdjustment.nome_chefia
+                      )?.split(" ")[0] || "Gestor"}
+                    </span>
                     <span className="font-label">{f.label}</span>
                   </button>
                 ))}

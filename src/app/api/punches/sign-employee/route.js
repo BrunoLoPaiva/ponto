@@ -41,13 +41,36 @@ export async function POST(req) {
       await fs.writeFile(path.join(uploadDir, fileName), buffer);
     }
 
+    // Função auxiliar para traduzir o User-Agent
+    const parseUserAgent = (ua) => {
+      if (!ua || ua === "Navegador Desconhecido") return ua;
+      let browser = "Navegador Desconhecido";
+      let os = "SO Desconhecido";
+
+      if (ua.includes("Edg")) browser = "Microsoft Edge";
+      else if (ua.includes("Chrome")) browser = "Google Chrome";
+      else if (ua.includes("Firefox")) browser = "Mozilla Firefox";
+      else if (ua.includes("Safari") && !ua.includes("Chrome"))
+        browser = "Apple Safari";
+
+      if (ua.includes("Windows NT 10.0")) os = "Windows 10/11";
+      else if (ua.includes("Windows NT 6.")) os = "Windows 7/8";
+      else if (ua.includes("Mac OS X")) os = "macOS";
+      else if (ua.includes("Linux")) os = "Linux";
+      else if (ua.includes("Android")) os = "Android";
+      else if (ua.includes("iPhone") || ua.includes("iPad")) os = "iOS";
+
+      return `${browser} em ${os}`;
+    };
+
     // 1. Captura os dados de auditoria do request
-    const ipFuncionario =
-      req.headers.get("x-forwarded-for") ||
+    const rawIp =
+      req.headers.get("x-forwarded-for")?.split(",")[0] ||
       req.headers.get("x-real-ip") ||
       "IP Local/Desconhecido";
-    const userAgentFuncionario =
-      req.headers.get("user-agent") || "Navegador Desconhecido";
+    const ipFuncionario = rawIp.trim();
+    const rawUa = req.headers.get("user-agent") || "Navegador Desconhecido";
+    const userAgentFuncionario = parseUserAgent(rawUa);
 
     const db = await getDb();
 

@@ -84,7 +84,15 @@ export const EmployeeDashboard = ({ hideHeader = false }) => {
           { headers: { Authorization: `Bearer ${token}` } },
         );
         const data = await response.json();
-        if (isMounted && data.success) setAdjustments(data.data);
+        if (isMounted && data.success) {
+          // Só atualiza o estado se houver mudança real nos dados
+          setAdjustments((prev) => {
+            if (JSON.stringify(prev) !== JSON.stringify(data.data)) {
+              return data.data;
+            }
+            return prev;
+          });
+        }
       } catch (error) {
         console.error("Error fetching adjustments", error);
       } finally {
@@ -93,7 +101,7 @@ export const EmployeeDashboard = ({ hideHeader = false }) => {
     };
 
     fetchAdjustments();
-    const interval = setInterval(fetchAdjustments, 1000);
+    const interval = setInterval(fetchAdjustments, 10000);
     return () => {
       isMounted = false;
       clearInterval(interval);
@@ -481,7 +489,10 @@ export const EmployeeDashboard = ({ hideHeader = false }) => {
           signatureFont={printingFont}
           signatoryName={printingAdjustment.nome_completo || user?.name || ""}
           supervisorFont={printingAdjustment.supervisor_signature_font}
-          supervisorName={printingAdjustment.nome_chefia_completo || printingAdjustment.nome_chefia}
+          supervisorName={
+            printingAdjustment.nome_chefia_completo ||
+            printingAdjustment.nome_chefia
+          }
         />
       )}
 
@@ -574,7 +585,10 @@ export const EmployeeDashboard = ({ hideHeader = false }) => {
                 signatureFont={previewAdjustment.signature_font}
                 signatoryName={previewAdjustment.nome_completo || ""}
                 supervisorFont={previewAdjustment.supervisor_signature_font}
-                supervisorName={previewAdjustment.nome_chefia_completo || previewAdjustment.nome_chefia}
+                supervisorName={
+                  previewAdjustment.nome_chefia_completo ||
+                  previewAdjustment.nome_chefia
+                }
               />
             </div>
           </div>

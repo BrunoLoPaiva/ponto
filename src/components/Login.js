@@ -11,6 +11,16 @@ export const Login = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
+  const [isValidateMode, setIsValidateMode] = useState(false);
+  const [hashInput, setHashInput] = useState("");
+
+  const handleValidateDocument = (e) => {
+    e.preventDefault();
+    if (!hashInput.trim()) return;
+    // Redireciona para a página de validação existente
+    window.location.href = `/validar/${hashInput.trim()}`;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -96,6 +106,48 @@ export const Login = () => {
             {loading ? <span className="loader"></span> : "Entrar no Sistema"}
           </button>
         </form>
+
+        {/* ═══ SESSÃO DE VALIDAÇÃO PÚBLICA ═══ */}
+        <div className="validation-section">
+          <div className="validation-divider">
+            <span>ou</span>
+          </div>
+
+          {!isValidateMode ? (
+            <button
+              type="button"
+              className="btn-validate-toggle"
+              onClick={() => setIsValidateMode(true)}
+            >
+              🔒 Validar Documento Assinado
+            </button>
+          ) : (
+            <form onSubmit={handleValidateDocument} className="validate-form">
+              <label htmlFor="hash">Código de Autenticidade (Hash):</label>
+              <input
+                id="hash"
+                type="text"
+                placeholder="Ex: 5f9a3b2..."
+                value={hashInput}
+                onChange={(e) => setHashInput(e.target.value)}
+                className="input-field"
+                autoComplete="off"
+              />
+              <div className="validate-actions">
+                <button type="submit" className="btn-validate-submit">
+                  Validar
+                </button>
+                <button
+                  type="button"
+                  className="btn-validate-cancel"
+                  onClick={() => setIsValidateMode(false)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
 
         <footer className="login-footer">
           <p>© {new Date().getFullYear()} | ViaRondon</p>

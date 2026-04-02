@@ -53,8 +53,14 @@ export const ControllerDashboard = () => {
           `/api/punches/controller-adjustments?username=${user?.username}`,
           { headers: { Authorization: `Bearer ${token}` } },
         );
-        const data = await response.json();
-        if (isMounted && data.success) setAdjustments(data.data);
+        if (isMounted && data.success) {
+          setAdjustments((prev) => {
+            if (JSON.stringify(prev) !== JSON.stringify(data.data)) {
+              return data.data;
+            }
+            return prev;
+          });
+        }
       } catch (error) {
         console.error("Error fetching controller adjustments", error);
       } finally {
